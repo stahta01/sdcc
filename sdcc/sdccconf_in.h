@@ -128,6 +128,9 @@
 #undef OPT_DISABLE_HC08
 
 /* XXX */
+#undef OPT_DISABLE_MC6809
+
+/* XXX */
 #undef OPT_DISABLE_MCS51
 
 /* XXX */
