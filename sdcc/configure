@@ -640,6 +640,7 @@ OPT_DISABLE_PACKIHX
 OPT_DISABLE_DEVICE_LIB
 OPT_DISABLE_UCSIM
 OPT_DISABLE_AVR
+OPT_DISABLE_M6809
 OPT_DISABLE_PDK16
 OPT_DISABLE_PDK15
 OPT_DISABLE_PDK14
@@ -777,6 +778,7 @@ enable_pdk13_port
 enable_pdk14_port
 enable_pdk15_port
 enable_pdk16_port
+enable_m6809_port
 enable_ucsim
 enable_device_lib
 enable_packihx
@@ -1464,6 +1466,7 @@ Optional Features:
   --disable-pdk14-port    Excludes the PDK14 port
   --disable-pdk15-port    Excludes the PDK15 port
   --enable-pdk16-port     Includes the PDK16 port
+  --disable-m6809-port    Excludes the M6809 port
   --disable-ucsim         Disables configuring and building of ucsim
   --disable-device-lib    Disables building device libraries
   --disable-packihx       Disables building packihx
@@ -8341,6 +8344,32 @@ _ACEOF
   fi
 
 
+  # Check whether --enable-m6809-port was given.
+if test "${enable_m6809_port+set}" = set; then :
+  enableval=$enable_m6809_port;
+fi
+
+
+  if test "$enable_m6809_port" = "no"; then
+    OPT_DISABLE_M6809=1
+  else
+    enable_m6809_port="yes"
+    OPT_DISABLE_M6809=0
+  fi
+
+
+cat >>confdefs.h <<_ACEOF
+#define OPT_DISABLE_M6809 $OPT_DISABLE_M6809
+_ACEOF
+
+
+
+  echo m6809 >>ports.all
+  if test $OPT_DISABLE_M6809 = 0; then
+    echo m6809 >>ports.build
+  fi
+
+
 # Unsupported targets
 ####AC_DO_PORT_ENABLER(avr,   avr,   AVR,   [Includes the AVR port (disabled by default)])
 OPT_DISABLE_AVR=1
@@ -8885,6 +8914,13 @@ if test $OPT_DISABLE_HC08 = 0 || test $OPT_DISABLE_S08 = 0; then
   ac_config_files="$ac_config_files src/hc08/Makefile sdas/as6808/Makefile"
 
   test $OPT_DISABLE_DEVICE_LIB = 0 && ac_config_files="$ac_config_files device/lib/hc08/Makefile device/lib/s08/Makefile"
+
+fi
+
+if test $OPT_DISABLE_M6809 = 0; then
+  ac_config_files="$ac_config_files src/m6809/Makefile sdas/as6809/Makefile"
+
+  test $OPT_DISABLE_DEVICE_LIB = 0 && ac_config_files="$ac_config_files device/lib/m6809/Makefile"
 
 fi
 
@@ -9702,6 +9738,9 @@ do
     "sdas/as6808/Makefile") CONFIG_FILES="$CONFIG_FILES sdas/as6808/Makefile" ;;
     "device/lib/hc08/Makefile") CONFIG_FILES="$CONFIG_FILES device/lib/hc08/Makefile" ;;
     "device/lib/s08/Makefile") CONFIG_FILES="$CONFIG_FILES device/lib/s08/Makefile" ;;
+    "src/m6809/Makefile") CONFIG_FILES="$CONFIG_FILES src/m6809/Makefile" ;;
+    "sdas/as6809/Makefile") CONFIG_FILES="$CONFIG_FILES sdas/as6809/Makefile" ;;
+    "device/lib/m6809/Makefile") CONFIG_FILES="$CONFIG_FILES device/lib/m6809/Makefile" ;;
     "src/mcs51/Makefile") CONFIG_FILES="$CONFIG_FILES src/mcs51/Makefile" ;;
     "sdas/as8051/Makefile") CONFIG_FILES="$CONFIG_FILES sdas/as8051/Makefile" ;;
     "device/lib/mcs51/Makefile") CONFIG_FILES="$CONFIG_FILES device/lib/mcs51/Makefile" ;;
@@ -10724,6 +10763,7 @@ sdcc ${VERSION} is now configured for
     ds400               ${enable_ds400_port}
     hc08                ${enable_hc08_port}
     s08                 ${enable_s08_port}
+    m6809               ${enable_m6809_port}
     mcs51               ${enable_mcs51_port}
     pic14               ${enable_pic14_port}
     pic16               ${enable_pic16_port}
@@ -10800,6 +10840,7 @@ sdcc ${VERSION} is now configured for
     ds400               ${enable_ds400_port}
     hc08                ${enable_hc08_port}
     s08                 ${enable_s08_port}
+    m6809               ${enable_m6809_port}
     mcs51               ${enable_mcs51_port}
     pic14               ${enable_pic14_port}
     pic16               ${enable_pic16_port}
