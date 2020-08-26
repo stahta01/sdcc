@@ -789,6 +789,7 @@ AC_DO_PORT(pdk13,    pdk,    PDK13,    [Excludes the PDK13 port])
 AC_DO_PORT(pdk14,    pdk,    PDK14,    [Excludes the PDK14 port])
 AC_DO_PORT(pdk15,    pdk,    PDK15,    [Excludes the PDK15 port])
 AC_DO_PORT_ENABLER(pdk16,    pdk,    PDK16,    [Includes the PDK16 port])
+AC_DO_PORT(m6809,   m6809, M6809,   [Excludes the M6809 port])
 
 # Unsupported targets
 ####AC_DO_PORT_ENABLER(avr,   avr,   AVR,   [Includes the AVR port (disabled by default)])
@@ -857,6 +858,12 @@ if test $OPT_DISABLE_HC08 = 0 || test $OPT_DISABLE_S08 = 0; then
                    sdas/as6808/Makefile])
   test $OPT_DISABLE_DEVICE_LIB = 0 && AC_CONFIG_FILES([device/lib/hc08/Makefile
                                                        device/lib/s08/Makefile])
+fi
+
+if test $OPT_DISABLE_M6809 = 0; then
+  AC_CONFIG_FILES([src/m6809/Makefile
+                   sdas/as6809/Makefile])
+  test $OPT_DISABLE_DEVICE_LIB = 0 && AC_CONFIG_FILES([device/lib/m6809/Makefile])
 fi
 
 if test $OPT_DISABLE_MCS51 = 0; then
@@ -1010,6 +1017,7 @@ sdcc ${VERSION} is now configured for
     ds400               ${enable_ds400_port}
     hc08                ${enable_hc08_port}
     s08                 ${enable_s08_port}
+    m6809               ${enable_m6809_port}
     mcs51               ${enable_mcs51_port}
     pic14               ${enable_pic14_port}
     pic16               ${enable_pic16_port}
