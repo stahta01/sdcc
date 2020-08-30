@@ -31,6 +31,7 @@
 #define TARGET_ID_PDK15    21
 #define TARGET_ID_PDK16    22
 #define TARGET_ID_Z80N     23
+#define TARGET_ID_M6809   24
 
 /* Macro to test the target we are compiling for.
    Can only be used after SDCCmain has defined the port
@@ -51,6 +52,7 @@
 #define TARGET_IS_Z80N     (port->id == TARGET_ID_Z80N)
 #define TARGET_IS_HC08     (port->id == TARGET_ID_HC08)
 #define TARGET_IS_S08      (port->id == TARGET_ID_S08)
+#define TARGET_IS_M6809    (port->id == TARGET_ID_M6809)
 #define TARGET_IS_STM8     (port->id == TARGET_ID_STM8)
 #define TARGET_IS_PDK13    (port->id == TARGET_ID_PDK13)
 #define TARGET_IS_PDK14    (port->id == TARGET_ID_PDK14)
@@ -63,9 +65,10 @@
 #define TARGET_HC08_LIKE   (TARGET_IS_HC08 || TARGET_IS_S08)
 #define TARGET_PIC_LIKE    (TARGET_IS_PIC14 || TARGET_IS_PIC16)
 #define TARGET_PDK_LIKE    (TARGET_IS_PDK13 || TARGET_IS_PDK14 || TARGET_IS_PDK15 || TARGET_IS_PDK16)
+#define TARGET_M6809_LIKE  (TARGET_IS_M6809)
 
 /* is using sdas / sdld assembler / linker */
-#define IS_SDASLD          (TARGET_Z80_LIKE || TARGET_MCS51_LIKE || TARGET_HC08_LIKE)
+#define IS_SDASLD          (TARGET_Z80_LIKE || TARGET_MCS51_LIKE || TARGET_HC08_LIKE || TARGET_M6809_LIKE)
 
 #define MAX_BUILTIN_ARGS        16
 /* definition of builtin functions */
@@ -481,6 +484,9 @@ extern PORT pdk14_port;
 #endif
 #if !OPT_DISABLE_PDK15
 extern PORT pdk15_port;
+#endif
+#if !OPT_DISABLE_M6809
+extern PORT m6809_port;
 #endif
 
 #endif /* PORT_INCLUDE */
