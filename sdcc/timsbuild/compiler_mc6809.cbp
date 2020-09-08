@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="Compiler mc6809" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Debug">
+				<Option output="bin_mc6809/Debug/mc6809" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj_mc6809/Debug/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-Wfatal-errors" />
+					<Add option="-g" />
+				</Compiler>
+			</Target>
+			<Target title="Release">
+				<Option output="bin_mc6809/Release/mc6809" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj_mc6809/Release/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O2" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+				</Linker>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-Wall" />
+			<Add option="-fexceptions" />
+			<Add option="-D__USE_MINGW_ANSI_STDIO=1" />
+			<Add directory="../src" />
+			<Add directory="../support/util" />
+			<Add directory="src" />
+			<Add directory="../timsbuild" />
+		</Compiler>
+		<Linker>
+			<Add option="-Wfatal-errors" />
+		</Linker>
+		<ExtraCommands>
+			<Add before="sh.exe -c &apos;sed -f mc6809.sed sdccconf.h.in &gt; sdccconf.h&apos;" />
+		</ExtraCommands>
+		<Unit filename="../src/SDCCBBlock.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/SDCCBBlock.h" />
+		<Unit filename="../src/SDCCargs.h" />
+		<Unit filename="../src/SDCCasm.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/SDCCasm.h" />
+		<Unit filename="../src/SDCCast.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/SDCCast.h" />
+		<Unit filename="../src/SDCCbitv.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/SDCCbitv.h" />
+		<Unit filename="../src/SDCCbtree.cc" />
+		<Unit filename="../src/SDCCbtree.h" />
+		<Unit filename="../src/SDCCcflow.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/SDCCcflow.h" />
+		<Unit filename="../src/SDCCcse.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/SDCCcse.h" />
+		<Unit filename="../src/SDCCdebug.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/SDCCdebug.h" />
+		<Unit filename="../src/SDCCdflow.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/SDCCdflow.h" />
+		<Unit filename="../src/SDCCerr.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/SDCCerr.h" />
+		<Unit filename="../src/SDCCgen.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/SDCCgen.h" />
+		<Unit filename="../src/SDCCglobl.h" />
+		<Unit filename="../src/SDCCglue.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/SDCCglue.h" />
+		<Unit filename="../src/SDCChasht.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/SDCChasht.h" />
+		<Unit filename="../src/SDCCicode.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/SDCCicode.h" />
+		<Unit filename="../src/SDCClabel.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/SDCClabel.h" />
+		<Unit filename="../src/SDCCloop.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/SDCCloop.h" />
+		<Unit filename="../src/SDCClospre.cc" />
+		<Unit filename="../src/SDCClospre.hpp" />
+		<Unit filename="../src/SDCClrange.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/SDCClrange.h" />
+		<Unit filename="../src/SDCCmacro.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/SDCCmacro.h" />
+		<Unit filename="../src/SDCCmain.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/SDCCmem.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/SDCCmem.h" />
+		<Unit filename="../src/SDCCnaddr.cc" />
+		<Unit filename="../src/SDCCnaddr.hpp" />
+		<Unit filename="../src/SDCCopt.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/SDCCopt.h" />
+		<Unit filename="../src/SDCCpeeph.awk" />
+		<Unit filename="../src/SDCCpeeph.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/SDCCpeeph.h" />
+		<Unit filename="../src/SDCCptropt.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/SDCCptropt.h" />
+		<Unit filename="../src/SDCCset.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/SDCCset.h" />
+		<Unit filename="../src/SDCCsymt.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/SDCCsymt.h" />
+		<Unit filename="../src/SDCCsystem.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/SDCCsystem.h" />
+		<Unit filename="../src/SDCCutil.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/SDCCutil.h" />
+		<Unit filename="../src/SDCCval.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/SDCCval.h" />
+		<Unit filename="../src/cdbFile.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/common.h" />
+		<Unit filename="../src/mc6809/gen.c">
+			<Option compilerVar="CC" />
+			<Option weight="40" />
+		</Unit>
+		<Unit filename="../src/mc6809/gen.h" />
+		<Unit filename="../src/mc6809/m6809.h" />
+		<Unit filename="../src/mc6809/main.c">
+			<Option compilerVar="CC" />
+			<Option weight="40" />
+		</Unit>
+		<Unit filename="../src/mc6809/peep.c">
+			<Option compilerVar="CC" />
+			<Option weight="40" />
+		</Unit>
+		<Unit filename="../src/mc6809/peep.h" />
+		<Unit filename="../src/mc6809/peeph.def">
+			<Option compilerVar="AWK" />
+			<Option compile="1" />
+			<Option weight="0" />
+			<Option compiler="gcc" use="1" buildCommand="sh.exe -c &apos;gawk -f ../src/SDCCpeeph.awk $file &gt; $file_name.rul&apos;" />
+		</Unit>
+		<Unit filename="../src/mc6809/ralloc.c">
+			<Option compilerVar="CC" />
+			<Option weight="40" />
+		</Unit>
+		<Unit filename="../src/mc6809/ralloc.h" />
+		<Unit filename="../src/mc6809/ralloc2.cc">
+			<Option weight="40" />
+		</Unit>
+		<Unit filename="../src/mc6809/reg_index.h" />
+		<Unit filename="../src/mc6809/support.c">
+			<Option compilerVar="CC" />
+			<Option weight="40" />
+		</Unit>
+		<Unit filename="../src/mc6809/support.h" />
+		<Unit filename="../src/port.h" />
+		<Unit filename="../src/version.awk" />
+		<Unit filename="../support/util/NewAlloc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../support/util/dbuf.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../support/util/dbuf.h" />
+		<Unit filename="../support/util/dbuf_string.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../support/util/dbuf_string.h" />
+		<Unit filename="../support/util/newalloc.h" />
+		<Unit filename="src/SDCClex.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/SDCCy.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/SDCCy.h" />
+		<Unit filename="src/version.h" />
+		<Extensions />
+	</Project>
+</CodeBlocks_project_file>
