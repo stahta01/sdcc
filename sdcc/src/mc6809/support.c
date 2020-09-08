@@ -1,10 +1,10 @@
-/** @file z80/support.c
+/** @file mc6809/support.c
  */
-#include "z80.h"
+#include "m6809.h"
 #include <math.h>
 
 int
-convertFloat (Z80_FLOAT * f, double native)
+convertFloat (MC6809_FLOAT * f, double native)
 {
   unsigned long mantissa, exponent;
   double f2;

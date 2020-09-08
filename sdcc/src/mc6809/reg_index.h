@@ -1,8 +1,6 @@
 /*-------------------------------------------------------------------------
 
-  mc6809/ralloc.h - header file register allocation
-
-                Written By -  Sandeep Dutta . sandeep.dutta@usa.net (1998)
+  mc6809/reg_index.h - header file register index
 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -22,41 +20,38 @@
    You are forbidden to forbid anyone else to use, share and improve
    what you give them.   Help stamp out software-hoarding!  
 -------------------------------------------------------------------------*/
-#ifndef MC6809_RALLOC_H
-#define MC6809_RALLOC_H 1
-
-#include "SDCCicode.h"
-#include "SDCCBBlock.h"
-
-#include "reg_index.h"
+#ifndef MC6809_REG_INDEX_H
+#define MC6809_REG_INDEX_H 1
 
 enum
 {
-  REG_PTR = 1,
-  REG_GPR = 2,
-  REG_CND = 4
+  MIN_IDX=0,
+  A_IDX = MIN_IDX,    /* Accumulator A */
+  B_IDX,              /* Accumulator B */
+
+  XL_IDX,             /* Lower byte of X */
+  XH_IDX,             /* Upper byte of X */
+  YL_IDX,             /* Lower byte of Y */
+  YH_IDX,             /* Upper byte of Y */
+  UL_IDX,             /* Lower byte of U */
+  UH_IDX,             /* Upper byte of U */
+
+  CND_IDX,            /* Condition Register */
+
+  DP_IDX,             /* Direct page */
+
+  MAX_ASMOP_IDX=DP_IDX,
+
+  S_IDX,              /* Stack Pointer */
+
+  PC_IDX,             /* Program Counter */
+
+  X_IDX,              /* Index X */
+  Y_IDX,              /* Index Y */
+  U_IDX,              /* User Stack Pointer */
+  D_IDX,              /* Registers A and B combined */
+
+  MAX_IDX=D_IDX
 };
 
-/* definition for the registers */
-typedef struct reg_info
-{
-  short type;                   /* can have value 
-                                   REG_GPR, REG_PTR or REG_CND */
-  short rIdx;                   /* index into register table */
-  char *name;                   /* name */
-  unsigned isFree:1;            /* is currently unassigned  */
-} reg_info;
-
-extern reg_info *regsMC6809;
-
-void assignRegisters (eBBlock **, int);
-reg_info *regWithIdx (int);
-
-void mc6809_assignRegisters (ebbIndex *);
-bitVect *mc6809_rUmaskForOp (const operand * op);
-
-void mc6809SpillThis (symbol *);
-iCode *mc6809_ralloc2_cc(ebbIndex *ebbi);
-
-void MC6809RegFix (eBBlock ** ebbs, int count);
 #endif

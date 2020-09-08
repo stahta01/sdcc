@@ -24,7 +24,7 @@
 
 #include "common.h"
 #include "SDCCicode.h"
-#include "z80.h"
+#include "m6809.h"
 #include "SDCCglobl.h"
 #include "SDCCpeeph.h"
 #include "gen.h"
@@ -55,9 +55,9 @@ static struct
   lineNode *head;
 } _G;
 
-extern bool z80_regs_used_as_parms_in_calls_from_current_function[IYH_IDX + 1];
-extern bool z80_symmParm_in_calls_from_current_function;
-extern bool z80_regs_preserved_in_calls_from_current_function[IYH_IDX + 1];
+extern bool mc6809_regs_used_as_parms_in_calls_from_current_function[MAX_IDX + 1];
+extern bool mc6809_symmParm_in_calls_from_current_function;
+extern bool mc6809_regs_preserved_in_calls_from_current_function[MAX_IDX + 1];
 
 /*-----------------------------------------------------------------*/
 /* univisitLines - clear "visited" flag in all lines               */
@@ -100,7 +100,7 @@ isReturned(const char *what)
       if(sym->type->select.d.dcl_type != FUNCTION)
         NOTUSEDERROR();
       spec = &(sym->etype->select.s);
-      if(spec->noun == V_VOID || spec->noun == V_INT && spec->b_longlong) // long long is not returned via registers for the Z80-related ports
+      if(spec->noun == V_VOID || spec->noun == V_INT && spec->b_longlong) // long long is not returned via registers
         size = 0;
       else if(spec->noun == V_CHAR || spec->noun == V_BOOL)
         size = 1;
@@ -122,7 +122,6 @@ isReturned(const char *what)
       size = 4;
     }
 
-  if(!IS_GB)
   {
     switch(*what)
       {
@@ -133,22 +132,6 @@ isReturned(const char *what)
       case 'h':
         return(size >= 2);
       case 'l':
-        return(size >= 1);
-      default:
-        return FALSE;
-      }
-  }
-  else
-  {
-    switch(*what)
-      {
-      case 'h':
-        return(size >= 4);
-      case 'l':
-        return(size >= 3);
-      case 'd':
-        return(size >= 2);
-      case 'e':
         return(size >= 1);
       default:
         return FALSE;
@@ -231,8 +214,7 @@ static bool argCont(const char *arg, const char *what)
   if (arg[0] == '#' || arg[0] == '_')
     return false;
 
-  if(arg[0] == '(' && arg[1] && arg[2] && (arg[2] != ')' && arg[3] != ')')
-     && !(IS_GB && (arg[3] == '-' || arg[3] == '+') && arg[4] == ')'))
+  if(arg[0] == '(' && arg[1] && arg[2] && (arg[2] != ')' && arg[3] != ')'))
     return false;
 
   if(*arg == '(')
@@ -252,29 +234,12 @@ static bool argCont(const char *arg, const char *what)
 }
 
 static bool
-z80MightBeParmInCallFromCurrentFunction(const char *what)
-{
-  if (strchr(what, 'l') && z80_regs_used_as_parms_in_calls_from_current_function[L_IDX])
-    return TRUE;
-  if (strchr(what, 'h') && z80_regs_used_as_parms_in_calls_from_current_function[H_IDX])
-    return TRUE;
-  if (strchr(what, 'e') && z80_regs_used_as_parms_in_calls_from_current_function[E_IDX])
-    return TRUE;
-  if (strchr(what, 'd') && z80_regs_used_as_parms_in_calls_from_current_function[D_IDX])
-    return TRUE;
-  if (strchr(what, 'c') && z80_regs_used_as_parms_in_calls_from_current_function[C_IDX])
-    return TRUE;
-  if (strchr(what, 'b') && z80_regs_used_as_parms_in_calls_from_current_function[B_IDX])
-    return TRUE;
-  if (strstr(what, "iy") && (z80_regs_used_as_parms_in_calls_from_current_function[IYL_IDX] || z80_regs_used_as_parms_in_calls_from_current_function[IYH_IDX]))
-    return TRUE;
-
-  return FALSE;
-}
+mc6809MightBeParmInCallFromCurrentFunction(const char *what)
+{}
 
 /* Check if the flag implies reading what. */
 static bool
-z80MightReadFlagCondition(const char *cond, const char *what)
+mc6809MightReadFlagCondition(const char *cond, const char *what)
 {
   while(isspace (*cond))
     cond++;
@@ -296,7 +261,7 @@ z80MightReadFlagCondition(const char *cond, const char *what)
 }
 
 static bool
-z80MightReadFlag(const lineNode *pl, const char *what)
+mc6809MightReadFlag(const lineNode *pl, const char *what)
 {
   if(ISINST(pl->line, "ld") ||
      ISINST(pl->line, "or") ||
@@ -326,8 +291,6 @@ z80MightReadFlag(const lineNode *pl, const char *what)
      ISINST(pl->line, "scf") ||
      ISINST(pl->line, "cpd") ||
      ISINST(pl->line, "cpi") ||
-     ISINST(pl->line, "ind") ||
-     ISINST(pl->line, "ini") ||
      ISINST(pl->line, "ldd") ||
      ISINST(pl->line, "ldi") ||
      ISINST(pl->line, "neg") ||
@@ -339,22 +302,9 @@ z80MightReadFlag(const lineNode *pl, const char *what)
      ISINST(pl->line, "rrca") ||
      ISINST(pl->line, "cpdr") ||
      ISINST(pl->line, "cpir") ||
-     ISINST(pl->line, "indr") ||
-     ISINST(pl->line, "inir") ||
      ISINST(pl->line, "lddr") ||
      ISINST(pl->line, "ldir") ||
-     ISINST(pl->line, "outd") ||
-     ISINST(pl->line, "outi") ||
      ISINST(pl->line, "jdnz"))
-    return false;
-
-  if(IS_GB &&
-     (ISINST(pl->line, "stop") ||
-      ISINST(pl->line, "ldh")))
-    return false;
-
-  if((IS_GB || IS_Z80N) &&
-      ISINST(pl->line, "swap"))
     return false;
 
   if(ISINST(pl->line, "rl") ||
@@ -379,7 +329,7 @@ z80MightReadFlag(const lineNode *pl, const char *what)
   // catch c, nc, z, nz, po, pe, p and m
   if(ISINST(pl->line, "jp") ||
      ISINST(pl->line, "jr"))
-    return (strchr(pl->line, ',') && z80MightReadFlagCondition(pl->line + 2, what));
+    return (strchr(pl->line, ',') && mc6809MightReadFlagCondition(pl->line + 2, what));
 
   // flags don't matter according to calling convention
   if(ISINST(pl->line, "reti") ||
@@ -387,23 +337,20 @@ z80MightReadFlag(const lineNode *pl, const char *what)
     return false;
 
   if(ISINST(pl->line, "call"))
-    return (strchr(pl->line, ',') && z80MightReadFlagCondition(pl->line + 4, what));
+    return (strchr(pl->line, ',') && mc6809MightReadFlagCondition(pl->line + 4, what));
 
   if(ISINST(pl->line, "ret"))
-    return (pl->line[3] == '\t' && z80MightReadFlagCondition(pl->line + 3, what));
+    return (pl->line[3] == '\t' && mc6809MightReadFlagCondition(pl->line + 3, what));
 
   // we don't know anything about this
   if(ISINST(pl->line, "rst"))
     return true;
 
-  if (IS_GB && ISINST(pl->line, "ldhl"))
-    return false;
-
   return true;
 }
 
 static bool
-z80MightRead(const lineNode *pl, const char *what)
+mc6809MightRead(const lineNode *pl, const char *what)
 {
   if(strcmp(what, "iyl") == 0 || strcmp(what, "iyh") == 0)
     what = "iy";
@@ -413,7 +360,7 @@ z80MightRead(const lineNode *pl, const char *what)
   if(ISINST(pl->line, "call") && strcmp(what, "sp") == 0)
     return TRUE;
 
-  if(strcmp(pl->line, "call\t__initrleblock") == 0 && (strchr(what, 'd') != 0 || strchr(what, 'e') != 0))
+  if(strcmp(pl->line, "call\t__initrleblock") == 0)
     return TRUE;
 
   if(strcmp(pl->line, "call\t___sdcc_call_hl") == 0 && (strchr(what, 'h') != 0 || strchr(what, 'l') != 0))
@@ -449,14 +396,14 @@ z80MightRead(const lineNode *pl, const char *what)
         return FALSE;
       }
       else // Fallback needed for calls through function pointers and for calls to literal addresses.
-        return z80MightBeParmInCallFromCurrentFunction(what);
+        return mc6809MightBeParmInCallFromCurrentFunction(what);
     }
 
   if(ISINST(pl->line, "reti") || ISINST(pl->line, "retn"))
     return(strcmp(what, "sp") == 0);
 
   if(ISINST(pl->line, "ret")) // --reserve-regs-iy uses ret in code gen for calls through function pointers
-    return(IY_RESERVED ? isReturned(what) || z80MightBeParmInCallFromCurrentFunction(what) : isReturned(what)) || strcmp(what, "sp") == 0;
+    return(IY_RESERVED ? isReturned(what) || mc6809MightBeParmInCallFromCurrentFunction(what) : isReturned(what)) || strcmp(what, "sp") == 0;
 
   if(!strcmp(pl->line, "ex\t(sp), hl") || !strcmp(pl->line, "ex\t(sp),hl"))
     return(!strcmp(what, "h") || !strcmp(what, "l") || strcmp(what, "sp") == 0);
@@ -503,18 +450,6 @@ z80MightRead(const lineNode *pl, const char *what)
           if(!strcmp(what, "a"))
             return(true);
           arg += 2;
-        }
-      else if(IS_Z80N && !strncmp(arg, "bc", 2) && *(arg + 2) == ',')
-        {
-          if(!strcmp(what, "b") || !strcmp(what, "c"))
-            return(true);
-          arg += 3;
-        }
-      else if(IS_Z80N && !strncmp(arg, "de", 2) && *(arg + 2) == ',')
-        {
-          if(!strcmp(what, "d") || !strcmp(what, "e"))
-            return(true);
-          arg += 3;
         }
       else if(!strncmp(arg, "hl", 2) && arg[2] == ',') // add hl, rr
         {
@@ -600,11 +535,7 @@ z80MightRead(const lineNode *pl, const char *what)
     {
       return(argCont(pl->line + 4, what));
     }
-  if((IS_GB || IS_Z80N) && ISINST(pl->line, "swap"))
-    {
-      return(argCont(pl->line + 5, what));
-    }
-  if(!IS_GB && !IS_RAB &&
+  if(
     (ISINST(pl->line, "rld") ||
      ISINST(pl->line, "rrd")))
     return(!!strstr("ahl", what));
@@ -620,8 +551,7 @@ z80MightRead(const lineNode *pl, const char *what)
   if(ISINST(pl->line, "ccf") ||
     ISINST(pl->line, "scf")  ||
     ISINST(pl->line, "nop")  ||
-    ISINST(pl->line, "halt") ||
-    (IS_GB && ISINST(pl->line, "stop")))
+    ISINST(pl->line, "halt") )
     return(false);
 
   if(ISINST(pl->line, "jp") || ISINST(pl->line, "jr"))
@@ -630,62 +560,26 @@ z80MightRead(const lineNode *pl, const char *what)
   if(ISINST(pl->line, "djnz"))
     return(strchr(what, 'b') != 0);
 
-  if(!IS_GB && (ISINST(pl->line, "ldd") || ISINST(pl->line, "lddr") || ISINST(pl->line, "ldi") || ISINST(pl->line, "ldir")))
+  if((ISINST(pl->line, "ldd") || ISINST(pl->line, "lddr") || ISINST(pl->line, "ldi") || ISINST(pl->line, "ldir")))
     return(strchr("bcdehl", *what));
-  if(IS_GB && (ISINST(pl->line, "ldd") || ISINST(pl->line, "ldi")))
+  if(ISINST(pl->line, "ldi"))
     return(strchr("hl", *what) || strstr(strchr(pl->line + 4, ','), what) != 0);
 
-  if(!IS_GB && !IS_RAB && (ISINST(pl->line, "cpd") || ISINST(pl->line, "cpdr") || ISINST(pl->line, "cpi") || ISINST(pl->line, "cpir")))
+  if((ISINST(pl->line, "cpd") || ISINST(pl->line, "cpdr") || ISINST(pl->line, "cpi") || ISINST(pl->line, "cpir")))
     return(strchr("abchl", *what));
 
-  if(!IS_GB && !IS_RAB && ISINST(pl->line, "out"))
+  if(ISINST(pl->line, "out"))
     return(strstr(strchr(pl->line + 4, ','), what) != 0 || strstr(pl->line + 4, "(c)") && (!strcmp(what, "b") || !strcmp(what, "c")));
-  if(!IS_GB && !IS_RAB && ISINST(pl->line, "in"))
+  if(ISINST(pl->line, "in"))
     return(!strstr(strchr(pl->line + 4, ','), "(c)") && !strcmp(what, "a") || strstr(strchr(pl->line + 4, ','), "(c)") && (!strcmp(what, "b") || !strcmp(what, "c")));
 
-  if(IS_GB && (ISINST(pl->line, "out") || ISINST(pl->line, "ldh") || ISINST(pl->line, "in")))
+  if(ISINST(pl->line, "ldh") || ISINST(pl->line, "in"))
     return(strstr(strchr(pl->line + 3, ','), what) != 0 || (!strcmp(what, "c") && strstr(pl->line + 3, "(c)")));
-
-  if(!IS_GB && !IS_RAB &&
-    (ISINST(pl->line, "ini") || ISINST(pl->line, "ind") || ISINST(pl->line, "inir") || ISINST(pl->line, "indr") ||
-    ISINST(pl->line, "outi") || ISINST(pl->line, "outd") || ISINST(pl->line, "otir") || ISINST(pl->line, "otdr")))
-    return(strchr("bchl", *what));
-
-  if((IS_Z180 || IS_EZ80_Z80) && ISINST(pl->line, "in0"))
-    return(false);
-
-  if((IS_Z180 || IS_EZ80_Z80 || IS_Z80N) && ISINST(pl->line, "mlt"))
-    return(argCont(pl->line + 4, what));
-
-  if((IS_Z180 || IS_EZ80_Z80) &&
-    (ISINST(pl->line, "otim") || ISINST(pl->line, "otimr") || ISINST(pl->line, "otir") || ISINST(pl->line, "otirx")))
-    return(strchr("bchl", *what));
-
-  if((IS_Z180 || IS_EZ80_Z80) && ISINST(pl->line, "slp"))
-    return(false);
-
-  if((IS_Z180 || IS_EZ80_Z80 || IS_Z80N) && ISINST(pl->line, "tst"))
-    return(argCont(pl->line + 4, what));
-
-  if((IS_Z180 || IS_EZ80_Z80) && ISINST(pl->line, "tstio"))
-    return(!strcmp(what, "c"));
-
-  if(IS_RAB && ISINST(pl->line, "mul"))
-    return(!strcmp(what, "b") || !strcmp(what, "c") || !strcmp(what, "d") || !strcmp(what, "e"));
-
-  if(IS_RAB && ISINST(pl->line, "bool"))
-    return(argCont(pl->line + 5, what));
     
-  if(IS_R3KA && ISINST(pl->line, "lsdr") || ISINST(pl->line, "lidr") || ISINST(pl->line, "lsddr") || ISINST(pl->line, "lsidr"))
+  if(ISINST(pl->line, "lsdr") || ISINST(pl->line, "lidr") || ISINST(pl->line, "lsddr") || ISINST(pl->line, "lsidr"))
     return(strchr("bcdehl", *what));
 
-  if(IS_EZ80_Z80 && ISINST(pl->line, "lea"))
-    return(argCont(strchr(pl->line + 4, ','), what));
-
-  if(IS_EZ80_Z80 && ISINST(pl->line, "pea"))
-    return(argCont(pl->line + 4, what) || !strcmp(what, "sp"));
-
-  if (IS_GB && (ISINST(pl->line, "lda") || ISINST(pl->line, "ldhl")))
+  if (ISINST(pl->line, "ldhl"))
     return(!strcmp(what, "sp"));
 
   /* TODO: Can we know anything about rst? */
@@ -696,7 +590,7 @@ z80MightRead(const lineNode *pl, const char *what)
 }
 
 static bool
-z80UncondJump(const lineNode *pl)
+mc6809UncondJump(const lineNode *pl)
 {
   if((ISINST(pl->line, "jp") || ISINST(pl->line, "jr")) &&
      strchr(pl->line, ',') == 0)
@@ -705,7 +599,7 @@ z80UncondJump(const lineNode *pl)
 }
 
 static bool
-z80CondJump(const lineNode *pl)
+mc6809CondJump(const lineNode *pl)
 {
   if(((ISINST(pl->line, "jp") || ISINST(pl->line, "jr")) &&
       strchr(pl->line, ',') != 0) ||
@@ -716,13 +610,13 @@ z80CondJump(const lineNode *pl)
 
 // TODO: z80 flags only partly implemented
 static bool
-z80SurelyWritesFlag(const lineNode *pl, const char *what)
+mc6809SurelyWritesFlag(const lineNode *pl, const char *what)
 {
   /* LD instruction is never change flags except LD A,I and LD A,R.
     But it is most popular instruction so place it first */
   if(ISINST(pl->line, "ld"))
     {
-      if(IS_GB || IS_RAB || !!strcmp(what, "pf") ||
+      if(!!strcmp(what, "pf") ||
           !argCont(pl->line+3, "a"))
         return false;
       const char *p = strchr(pl->line+4, ',');
@@ -736,7 +630,7 @@ z80SurelyWritesFlag(const lineNode *pl, const char *what)
      ISINST(pl->line, "rrca") ||
      ISINST(pl->line, "rra")  ||
      ISINST(pl->line, "rla"))
-    return (IS_GB || !!strcmp(what, "zf") && !!strcmp(what, "sf") && !!strcmp(what, "pf"));
+    return (!!strcmp(what, "zf") && !!strcmp(what, "sf") && !!strcmp(what, "pf"));
 
   if(ISINST(pl->line, "adc") ||
      ISINST(pl->line, "and") ||
@@ -761,19 +655,11 @@ z80SurelyWritesFlag(const lineNode *pl, const char *what)
   if(ISINST(pl->line, "bit") ||
      ISINST(pl->line, "cpd") ||
      ISINST(pl->line, "cpi") ||
-     ISINST(pl->line, "ind") ||
-     ISINST(pl->line, "ini") ||
      ISINST(pl->line, "rrd"))
     return (!!strcmp(what, "cf"));
 
   if(ISINST(pl->line, "cpdr") ||
-     ISINST(pl->line, "cpir") ||
-     ISINST(pl->line, "indr") ||
-     ISINST(pl->line, "inir") ||
-     ISINST(pl->line, "otdr") ||
-     ISINST(pl->line, "otir") ||
-     ISINST(pl->line, "outd") ||
-     ISINST(pl->line, "outi"))
+     ISINST(pl->line, "cpir"))
     return (!!strcmp(what, "cf"));
 
   if(ISINST(pl->line, "daa"))
@@ -804,12 +690,6 @@ z80SurelyWritesFlag(const lineNode *pl, const char *what)
      ISINST(pl->line, "call"))
     return true;
 
-  if(IS_GB &&
-     (ISINST(pl->line, "swap") ||
-      ISINST(pl->line, "ldhl") ||
-      ISINST(pl->line, "lda")))
-    return true;
-
   /* handle IN0 r,(n) and IN r,(c) instructions */
   if(ISINST(pl->line, "in0") || (!strncmp(pl->line, "in\t", 3) &&
      (!strcmp(pl->line+5, "(c)") || !strcmp(pl->line+5, "(bc)"))))
@@ -819,102 +699,11 @@ z80SurelyWritesFlag(const lineNode *pl, const char *what)
 }
 
 static bool
-z80SurelyWrites(const lineNode *pl, const char *what)
-{
-  if(strcmp(what, "iyl") == 0 || strcmp(what, "iyh") == 0)
-    what = "iy";
-  if(strcmp(what, "ixl") == 0 || strcmp(what, "ixh") == 0)
-    what = "ix";
-
-  //ld a, #0x00
-  if((ISINST(pl->line, "xor") || ISINST(pl->line, "sub")) && !strcmp(what, "a") &&
-     (!strcmp(pl->line+4, "a, a") || !strcmp(pl->line+4, "a,a") || (!strchr(pl->line, ',') && !strcmp(pl->line+4, "a"))))
-    return(true);
-
-  //ld a, #0x00
-  if(!strcmp(what, "a") && (!strcmp(pl->line, "and\ta, #0x00") || !strcmp(pl->line, "and\ta,#0x00") || !strcmp(pl->line, "and\t#0x00")))
-    return(true);
-
-  //ld a, #0xff
-  if(!strcmp(what, "a") && (!strcmp(pl->line, "or\ta, #0xff") || !strcmp(pl->line, "or\ta,#0xff") || !strcmp(pl->line, "or\t#0xff")))
-    return(true);
-
-  if(ISINST(pl->line, "ld") && strncmp(pl->line + 3, "hl", 2) == 0 && (what[0] == 'h' || what[0] == 'l'))
-    return(true);
-  if(ISINST(pl->line, "ld") && strncmp(pl->line + 3, "de", 2) == 0 && (what[0] == 'd' || what[0] == 'e'))
-    return(true);
-  if(ISINST(pl->line, "ld") && strncmp(pl->line + 3, "bc", 2) == 0 && (what[0] == 'b' || what[0] == 'c'))
-    return(true);
-  if((ISINST(pl->line, "ld") || ISINST(pl->line, "in"))
-    && strncmp(pl->line + 3, what, strlen(what)) == 0 && pl->line[3 + strlen(what)] == ',')
-    return(true);
-
-  if(IS_GB && (ISINST(pl->line, "ldd") || ISINST(pl->line, "ldi") || ISINST(pl->line, "ldh")))
-    return(strncmp(pl->line + 4, what, strlen(what)) == 0);
-
-  if(ISINST(pl->line, "pop") && strstr(pl->line + 4, what))
-    return(true);
-  if(ISINST(pl->line, "call") && strchr(pl->line, ',') == 0)
-    {
-      const symbol *f = findSym (SymbolTab, 0, pl->line + 6);
-      const bool *preserved_regs;
-
-      if(!strcmp(what, "ix"))
-        return(false);
-
-      if(f)
-          preserved_regs = f->type->funcAttrs.preserved_regs;
-      else // Err on the safe side.
-        preserved_regs = z80_regs_preserved_in_calls_from_current_function;
-
-      if(!strcmp(what, "c"))
-        return !preserved_regs[C_IDX];
-      if(!strcmp(what, "b"))
-        return !preserved_regs[B_IDX];
-      if(!strcmp(what, "e"))
-        return !preserved_regs[E_IDX];
-      if(!strcmp(what, "d"))
-        return !preserved_regs[D_IDX];
-      if(!strcmp(what, "l"))
-        return !preserved_regs[L_IDX];
-      if(!strcmp(what, "h"))
-        return !preserved_regs[H_IDX];
-      if(!strcmp(what, "iy"))
-        return !preserved_regs[IYL_IDX] && !preserved_regs[IYH_IDX];
-    }
-  if(strcmp(pl->line, "ret") == 0)
-    return true;
-
-  if (IS_Z180 || IS_EZ80_Z80 || IS_Z80N)
-    if (ISINST(pl->line, "mlt"))
-      return(strchr(pl->line + 4, *what) != 0);
-
-  if (IS_Z180 || IS_EZ80_Z80)
-    {
-      if (ISINST(pl->line, "otim") ||
-        ISINST(pl->line, "otimr") ||
-        ISINST(pl->line, "otdm") ||
-        ISINST(pl->line, "otdmr"))
-        return(strchr("bchl", *what) != NULL);
-
-      if (ISINST(pl->line, "in0"))
-        return(!strncmp(pl->line + 4, what, strlen(what)));
-    }
-
-  if (IS_EZ80_Z80 && ISINST(pl->line, "lea"))
-    return (strstr(pl->line + 4, what));
-
-  if (IS_GB && ISINST(pl->line, "lda") && strncmp(pl->line + 4, "hl", 2) == 0 && (what[0] == 'h' || what[0] == 'l'))
-    return(true);
-
-  if (IS_GB && ISINST(pl->line, "ldhl") && (what[0] == 'h' || what[0] == 'l'))
-    return(true);
-
-  return(false);
-}
+mc6809SurelyWrites(const lineNode *pl, const char *what)
+{}
 
 static bool
-z80SurelyReturns(const lineNode *pl)
+mc6809SurelyReturns(const lineNode *pl)
 {
   if(strcmp(pl->line, "ret") == 0)
     return TRUE;
@@ -985,7 +774,7 @@ scan4op (lineNode **pl, const char *what, const char *untilOp,
 
       if(isFlag)
         {
-        if(z80MightReadFlag(*pl, what))
+        if(mc6809MightReadFlag(*pl, what))
           {
             D(("S4O_RD_OP (flag)\n"));
             return S4O_RD_OP;
@@ -993,14 +782,14 @@ scan4op (lineNode **pl, const char *what, const char *untilOp,
         }
       else
         {
-        if(z80MightRead(*pl, what))
+        if(mc6809MightRead(*pl, what))
           {
             D(("S4O_RD_OP\n"));
             return S4O_RD_OP;
           }
         }
 
-      if(z80UncondJump(*pl))
+      if(mc6809UncondJump(*pl))
         {
           *pl = findLabel (*pl);
             if (!*pl)
@@ -1009,7 +798,7 @@ scan4op (lineNode **pl, const char *what, const char *untilOp,
                 return S4O_ABORT;
               }
         }
-      if(z80CondJump(*pl))
+      if(mc6809CondJump(*pl))
         {
           *plCond = findLabel (*pl);
           if (!*plCond)
@@ -1023,7 +812,7 @@ scan4op (lineNode **pl, const char *what, const char *untilOp,
 
       if(isFlag)
         {
-        if(z80SurelyWritesFlag(*pl, what))
+        if(mc6809SurelyWritesFlag(*pl, what))
           {
             D(("S4O_WR_OP (flag)\n"));
             return S4O_WR_OP;
@@ -1031,15 +820,15 @@ scan4op (lineNode **pl, const char *what, const char *untilOp,
         }
       else
         {
-        if(z80SurelyWrites(*pl, what))
+        if(mc6809SurelyWrites(*pl, what))
           {
             D(("S4O_WR_OP\n"));
             return S4O_WR_OP;
           }
         }
 
-      /* Don't need to check for de, hl since z80MightRead() does that */
-      if(z80SurelyReturns(*pl))
+      /* Don't need to check for de, hl since mc6809MightRead() does that */
+      if(mc6809SurelyReturns(*pl))
         {
           D(("S4O_TERM\n"));
           return S4O_TERM;
@@ -1086,9 +875,23 @@ doTermScan (lineNode **pl, const char *what)
     }
 }
 
+/* Regular 16 bit reg */
+static bool
+is16BitReg(const char *what)
+{
+  if(strlen(what) != 1)
+    return FALSE;
+  switch(*what)
+    {
+    case 'd':
+      return TRUE;
+    }
+  return FALSE;
+}
+
 /* Regular 8 bit reg */
 static bool
-isReg(const char *what)
+is8BitReg(const char *what)
 {
   if(strlen(what) != 1)
     return FALSE;
@@ -1096,99 +899,54 @@ isReg(const char *what)
     {
     case 'a':
     case 'b':
-    case 'c':
-    case 'd':
-    case 'e':
-    case 'h':
-    case 'l':
       return TRUE;
     }
   return FALSE;
 }
 
-/* 8-Bit reg only accessible by 16-bit and undocumented instructions */
+/* Regular reg */
 static bool
-isUReg(const char *what)
+isReg(const char *what)
 {
-  if(strcmp(what, "iyl") == 0 || strcmp(what, "iyh") == 0)
-    return TRUE;
-  if(strcmp(what, "ixl") == 0 || strcmp(what, "ixh") == 0)
-    return TRUE;
-  return FALSE;
-}
-
-static bool
-isRegPair(const char *what)
-{
-  if(strlen(what) != 2)
-    return FALSE;
-  if(strcmp(what, "bc") == 0)
-    return TRUE;
-  if(strcmp(what, "de") == 0)
-    return TRUE;
-  if(strcmp(what, "hl") == 0)
-    return TRUE;
-  if(strcmp(what, "ix") == 0)
-    return TRUE;
-  if(strcmp(what, "iy") == 0)
-    return TRUE;
-  return FALSE;
+  return is8BitReg(what) || is16BitReg(what);
 }
 
 /* Check that what is never read after endPl. */
 
 bool
-z80notUsed (const char *what, lineNode *endPl, lineNode *head)
+mc6809notUsed (const char *what, lineNode *endPl, lineNode *head)
 {
   lineNode *pl;
   D(("Checking for %s\n", what));
 
   if(strcmp(what, "af") == 0)
     {
-      if(!z80notUsed("a", endPl, head))
+      if(!mc6809notUsed("a", endPl, head))
         return FALSE;
       what++;
     }
 
   if(strcmp(what, "f") == 0)
-    return z80notUsed("zf", endPl, head) && z80notUsed("cf", endPl, head) &&
-           z80notUsed("sf", endPl, head) && z80notUsed("pf", endPl, head) &&
-           z80notUsed("nf", endPl, head) && z80notUsed("hf", endPl, head);
+    return mc6809notUsed("zf", endPl, head) && mc6809notUsed("cf", endPl, head) &&
+           mc6809notUsed("sf", endPl, head) && mc6809notUsed("pf", endPl, head) &&
+           mc6809notUsed("nf", endPl, head) && mc6809notUsed("hf", endPl, head);
 
   if(strcmp(what, "iy") == 0)
     {
       if(IY_RESERVED)
         return FALSE;
-      return(z80notUsed("iyl", endPl, head) && z80notUsed("iyh", endPl, head));
+      return(mc6809notUsed("iyl", endPl, head) && mc6809notUsed("iyh", endPl, head));
     }
 
   if(strcmp(what, "ix") == 0)
-    return(z80notUsed("ixl", endPl, head) && z80notUsed("ixh", endPl, head));
-
-  if(isRegPair(what))
-    {
-      char low[2], high[2];
-      low[0] = what[1];
-      high[0] = what[0];
-      low[1] = 0;
-      high[1] = 0;
-      return(z80notUsed(low, endPl, head) && z80notUsed(high, endPl, head));
-    }
+    return(mc6809notUsed("ixl", endPl, head) && mc6809notUsed("ixh", endPl, head));
 
   // P/V and L/V (rarbbits) are the same flag
   if(!strcmp(what, "vf") || !strcmp(what, "lf"))
     what = "pf";
 
-  // GBZ80 does not use what it does not have
-  // but this allows to write rules for all Z80ies
-  if(IS_GB && (!strcmp(what, "sf") || !strcmp(what, "pf")))
-    {
-      D(("Flag %s does not exist\n", what));
-      return true;
-    }
-
   // enable sp and flags
-  if(!isReg(what) && !isUReg(what) &&
+  if(!is8BitReg(what) &&
      strcmp(what, "sp") && strcmp(what+1, "f"))
     return FALSE;
 
@@ -1204,7 +962,7 @@ z80notUsed (const char *what, lineNode *endPl, lineNode *head)
 }
 
 bool
-z80notUsedFrom (const char *what, const char *label, lineNode *head)
+mc6809notUsedFrom (const char *what, const char *label, lineNode *head)
 {
   lineNode *cpl;
 
@@ -1212,7 +970,7 @@ z80notUsedFrom (const char *what, const char *label, lineNode *head)
     {
       if (cpl->isLabel && !strncmp (label, cpl->line, strlen(label)))
         {
-          return z80notUsed (what, cpl, head);
+          return mc6809notUsed (what, cpl, head);
         }
     }
 
@@ -1220,7 +978,7 @@ z80notUsedFrom (const char *what, const char *label, lineNode *head)
 }
 
 bool
-z80canAssign (const char *op1, const char *op2, const char *exotic)
+mc6809canAssign (const char *op1, const char *op2, const char *exotic)
 {
   const char *dst, *src;
 
@@ -1229,12 +987,12 @@ z80canAssign (const char *op1, const char *op2, const char *exotic)
   {
     if(!strcmp(exotic, "ix") || !strcmp(exotic, "iy"))
     {
-      if(isReg(op1) || (IS_EZ80_Z80 && isRegPair(op1)))
+      if(is8BitReg(op1))
         return TRUE;
     }
     else if(!strcmp(op2, "ix") || !strcmp(op2, "iy"))
     {
-      if(isReg(exotic) || exotic[0] == '#' || (IS_EZ80_Z80 && isRegPair(exotic)))
+      if(is8BitReg(exotic) || exotic[0] == '#')
         return TRUE;
     }
 
@@ -1246,13 +1004,13 @@ z80canAssign (const char *op1, const char *op2, const char *exotic)
   src = op2;
 
   // 8-bit regs can be assigned to each other directly.
-  if(isReg(dst) && isReg(src))
+  if(is8BitReg(dst) && is8BitReg(src))
     return TRUE;
 
   // Same if at most one of them is (hl).
-  if((isReg(dst) || (IS_EZ80_Z80 && isRegPair(dst))) && !strcmp(src, "(hl)"))
+  if((is8BitReg(dst)))
     return TRUE;
-  if(!strcmp(dst, "(hl)") && (isReg(src) || (IS_EZ80_Z80 && isRegPair(src))))
+  if(!strcmp(dst, "(hl)") && (is8BitReg(src) ))
     return TRUE;
 
   // Can assign between a and (bc), (de), (hl+), (hl-)
@@ -1263,13 +1021,13 @@ z80canAssign (const char *op1, const char *op2, const char *exotic)
      && !strcmp(src, "a"))
     return TRUE;
 
-  // Can load immediate values directly into registers and register pairs.
-  if((isReg(dst) || isRegPair(dst) || !strcmp(src, "sp")) && src[0] == '#')
+  // Can load immediate values directly into registers.
+  if((is8BitReg(dst) || !strcmp(src, "sp")) && src[0] == '#')
     return TRUE;
 
-  if((!strcmp(dst, "a") || (!IS_GB && (isRegPair(dst) || !strcmp(src, "sp")))) && !strncmp(src, "(#", 2))
+  if((!strcmp(dst, "a") || !strcmp(src, "sp")) && !strncmp(src, "(#", 2))
     return TRUE;
-  if(!strncmp(dst, "(#", 2) && (!strcmp(src, "a") || (!IS_GB && isRegPair(src)) || !strcmp(src, "sp")))
+  if(!strncmp(dst, "(#", 2) && (!strcmp(src, "a") || !strcmp(src, "sp")))
     return TRUE;
 
   // Can load immediate values directly into (hl).
@@ -1301,66 +1059,7 @@ registerBaseName (const char *op)
   return op;
 }
 
-// canJoinRegs(reg_hi reg_lo [dst]) returns TRUE,
-bool z80canJoinRegs (const char **regs, char dst[20])
-{
-  //check for only 2 source registers
-  if (!regs[0] || !regs[1] || regs[2])
-    return FALSE;
-  size_t l1 = strlen (regs[0]);
-  size_t l2 = strlen (regs[1]);
-  if (l1 + l2 >= 20)
-    return FALSE;
-  if (l1 == 0 || l2 == 0)
-    {
-      if (l1 == 0 && l2 == 0)
-        return FALSE;
-      strcpy (dst, registerBaseName (regs[l1 ? 0 : 1]));
-    }
-  else
-    {
-      memcpy (&dst[0], regs[0], l1);
-      memcpy (&dst[l1], regs[1], l2 + 1); //copy including \0
-    }
-  if (!strcmp (dst, "ixhixl") || !strcmp (dst, "iyhiyl"))
-    {
-      if (IS_GB)
-        return FALSE;
-      dst[2] = '\0';
-    }
-  return isRegPair (dst);
-}
-
-bool z80canSplitReg (const char *reg, char dst[][16], int nDst)
-{
-  int i;
-  if (nDst < 0 || nDst > 2)
-    return FALSE;
-  if (!strcmp (reg, "bc") || !strcmp (reg, "de") || !strcmp (reg, "hl"))
-    {
-      for (i = 0; i < nDst; ++i)
-        {
-          dst[i][0] = reg[i];
-          dst[i][1] = '\0';
-        }
-    }
-  else if (!IS_GB && (!strcmp (reg, "ix") || !strcmp (reg, "iy")))
-    {
-      for (i = 0; i < nDst; ++i)
-        {
-          dst[i][0] = reg[0];
-          dst[i][1] = reg[1];
-          dst[i][2] = "hl"[i];
-          dst[i][3] = '\0';
-        }
-    }
-  else
-    return FALSE;
-
-  return TRUE;
-}
-
-int z80instructionSize(lineNode *pl)
+int mc6809instructionSize(lineNode *pl)
 {
   const char *op1start, *op2start;
 
@@ -1392,9 +1091,6 @@ int z80instructionSize(lineNode *pl)
   else
     op2start = NULL;
 
-  if(TARGET_IS_TLCS90) // Todo: More accurate estimate.
-    return(6);
-
   /* All ld instructions */
   if(ISINST(pl->line, "ld"))
     {
@@ -1407,26 +1103,11 @@ int z80instructionSize(lineNode *pl)
       if(op1start[0] == '('               && STRNCASECMP(op1start, "(bc)", 4) &&
          STRNCASECMP(op1start, "(de)", 4) && STRNCASECMP(op1start, "(hl" , 3) &&
          STRNCASECMP(op2start, "hl", 2)   && STRNCASECMP(op2start, "a", 1)   &&
-         (!IS_GB || STRNCASECMP(op2start, "sp", 2)) ||
+         (STRNCASECMP(op2start, "sp", 2)) ||
          op2start[0] == '('               && STRNCASECMP(op2start, "(bc)", 4) &&
          STRNCASECMP(op1start, "(de)", 4) && STRNCASECMP(op2start, "(hl" , 3) &&
          STRNCASECMP(op1start, "hl", 2)   && STRNCASECMP(op1start, "a", 1))
         return(4);
-
-      /* Rabbit 16-bit pointer load */
-      if(IS_RAB && !STRNCASECMP(op1start, "hl", 2) && (argCont(op2start, "(hl)") || argCont(op2start, "(iy)")))
-        return(4);
-      if(IS_RAB && !STRNCASECMP(op1start, "hl", 2) && (argCont(op2start, "(sp)") || argCont(op2start, "(ix)")))
-        return(3);
-
-      if(IS_EZ80_Z80 && /* eZ80 16-bit pointer load */
-        (!STRNCASECMP(op1start, "bc", 2) || !STRNCASECMP(op1start, "de", 2) || !STRNCASECMP(op1start, "hl", 2) || !STRNCASECMP(op1start, "ix", 2) || !STRNCASECMP(op1start, "iy", 2)))
-        {
-          if (!STRNCASECMP(op2start, "(hl)", 4))
-            return(2);
-          if (argCont(op2start, "(ix)") || argCont(op2start, "(iy)"))
-            return(3);
-        }
 
       /* These 4 are the only remaining cases of 3 byte long ld instructions. */
       if(argCont(op2start, "(ix)") || argCont(op2start, "(iy)"))
@@ -1454,12 +1135,12 @@ int z80instructionSize(lineNode *pl)
     }
 
   // load from sp with offset
-  if(IS_GB && (ISINST(pl->line, "lda") || ISINST(pl->line, "ldhl")))
+  if((ISINST(pl->line, "lda") || ISINST(pl->line, "ldhl")))
     {
       return(2);
     }
   // load from/to 0xffXX addresses
-  if(IS_GB && (ISINST(pl->line, "ldh")))
+  if((ISINST(pl->line, "ldh")))
     {
       if(!STRNCASECMP(pl->line, "(c)", 3))
         return(1);
@@ -1476,14 +1157,12 @@ int z80instructionSize(lineNode *pl)
           werrorfl(pl->ic->filename, pl->ic->lineno, W_UNRECOGNIZED_ASM, __FUNCTION__, 4, pl->line);
           return(4);
         }
-      if(argCont(op1start, "(sp)") && (IS_RAB || !STRNCASECMP(op2start, "ix", 2) || !STRNCASECMP(op2start, "iy", 2)))
+      if(argCont(op1start, "(sp)") && (!STRNCASECMP(op2start, "ix", 2) || !STRNCASECMP(op2start, "iy", 2)))
         return(2);
       return(1);
     }
 
   /* Push / pop */
-  if(ISINST(pl->line, "push")  && IS_Z80N && op1start[0] == '#')
-    return(4);
   if(ISINST(pl->line, "push") || ISINST(pl->line, "pop"))
     {
       if(!STRNCASECMP(op1start, "ix", 2) || !STRNCASECMP(op1start, "iy", 2))
@@ -1492,25 +1171,8 @@ int z80instructionSize(lineNode *pl)
     }
 
   /* 16 bit add / subtract / and */
-  if(IS_Z80N && ISINST(pl->line, "add") && (!STRNCASECMP(op1start, "bc", 2) || !STRNCASECMP(op1start, "de", 2) || !STRNCASECMP(op1start, "hl", 2)))
-    return(4);
-  if((ISINST(pl->line, "add") || ISINST(pl->line, "adc") || ISINST(pl->line, "sbc") || IS_RAB && ISINST(pl->line, "and")) &&
-     !STRNCASECMP(op1start, "hl", 2))
-    {
-      if(ISINST(pl->line, "add") || ISINST(pl->line, "and"))
-        return(1);
-      return(2);
-    }
   if(ISINST(pl->line, "add") && (!STRNCASECMP(op1start, "ix", 2) || !STRNCASECMP(op1start, "iy", 2)))
     return(2);
-
-  /* signed 8 bit adjustment to stack pointer */
-  if((IS_RAB || IS_GB) && ISINST(pl->line, "add") && !STRNCASECMP(op1start, "sp", 2))
-    return(2);
-
-  /* 16 bit adjustment to stack pointer */
-  if(IS_TLCS90 && ISINST(pl->line, "add") && !STRNCASECMP(op1start, "sp", 2))
-    return(3);
 
   /* 8 bit arithmetic, two operands */
   if(op2start &&  op1start[0] == 'a' &&
@@ -1568,13 +1230,7 @@ int z80instructionSize(lineNode *pl)
       return(3);
     }
 
-  if (IS_RAB &&
-      (ISINST(pl->line, "ipset3") || ISINST(pl->line, "ipset2") ||
-       ISINST(pl->line, "ipset1") || ISINST(pl->line, "ipset0") ||
-       ISINST(pl->line, "ipres")))
-    return(2);
-
-  if(!IS_GB && (ISINST(pl->line, "reti") || ISINST(pl->line, "retn")))
+  if((ISINST(pl->line, "reti") || ISINST(pl->line, "retn")))
     return(2);
 
   if(ISINST(pl->line, "ret") || ISINST(pl->line, "reti") || ISINST(pl->line, "rst"))
@@ -1590,8 +1246,7 @@ int z80instructionSize(lineNode *pl)
     return(2);
 
   if(ISINST(pl->line, "daa") || ISINST(pl->line, "cpl")  || ISINST(pl->line, "ccf") || ISINST(pl->line, "scf") ||
-     ISINST(pl->line, "nop") || ISINST(pl->line, "halt") || ISINST(pl->line,  "ei") || ISINST(pl->line, "di")  ||
-     (IS_GB && ISINST(pl->line, "stop")))
+     ISINST(pl->line, "nop") || ISINST(pl->line, "halt") || ISINST(pl->line,  "ei") || ISINST(pl->line, "di"))
     return(1);
 
   if(ISINST(pl->line, "im"))
@@ -1600,37 +1255,10 @@ int z80instructionSize(lineNode *pl)
   if(ISINST(pl->line, "in") || ISINST(pl->line, "out") || ISINST(pl->line, "ot"))
     return(2);
 
-  if((IS_Z180 || IS_EZ80_Z80) && (ISINST(pl->line, "in0") || ISINST(pl->line, "out0")))
+  if(ISINST(pl->line, "out0"))
     return(3);
-
-  if((IS_Z180 || IS_EZ80_Z80 || IS_Z80N) && ISINST(pl->line, "mlt"))
-    return(2);
-
-  if((IS_Z180 || IS_EZ80_Z80 || IS_Z80N) && ISINST(pl->line, "tst"))
-    return((op1start[0] == '#' || op2start && op1start[0] == '#') ? 3 : 2);
-
-  if(IS_RAB && ISINST(pl->line, "mul"))
-    return(1);
 
   if(ISINST(pl->line, "lddr") || ISINST(pl->line, "ldir"))
-    return(2);
-
-  if(IS_R3KA &&
-    (ISINST(pl->line, "lddsr") || ISINST(pl->line, "ldisr") ||
-     ISINST(pl->line, "lsdr")  || ISINST(pl->line, "lsir")  ||
-     ISINST(pl->line, "lsddr") || ISINST(pl->line, "lsidr")))
-    return(2);
-
-  if(IS_R3KA && (ISINST(pl->line, "uma") || ISINST(pl->line, "ums")))
-    return(2);
-
-  if(IS_RAB && ISINST(pl->line, "bool"))
-    return(!STRNCASECMP(op1start, "hl", 2) ? 1 : 2);
-
-  if(IS_EZ80_Z80 && (ISINST(pl->line, "lea") || ISINST(pl->line, "pea")))
-    return(3);
-
-  if(IS_GB || IS_Z80N && ISINST(pl->line, "swap"))
     return(2);
 
   if(ISINST(pl->line, ".db") || ISINST(pl->line, ".byte"))
@@ -1655,10 +1283,5 @@ int z80instructionSize(lineNode *pl)
   else
     werrorfl("unknown", 0, W_UNRECOGNIZED_ASM, __func__, 999, pl->line);
   return(999);
-}
-
-bool z80symmParmStack (void)
-{
-  return z80_symmParm_in_calls_from_current_function;
 }
 

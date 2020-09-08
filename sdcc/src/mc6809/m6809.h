@@ -1,5 +1,5 @@
-/** @file z80/z80.h
-    Common definitions between the z80 and gbz80 parts.
+/** @file mc6809/m6809.h
+    Common definitions between the MC6809 and HD6309 CPUs.
 */
 #include "common.h"
 #include "ralloc.h"
@@ -9,46 +9,28 @@
 
 typedef enum
   {
-    SUB_Z80,
-    SUB_Z180,
-    SUB_R2K,
-    SUB_R3KA,
-    SUB_GBZ80,
-    SUB_TLCS90,
-    SUB_EZ80_Z80,
-    SUB_Z80N
+    SUB_MC6809,
+    SUB_HD6309
   }
-Z80_SUB_PORT;
+MC6809_SUB_PORT;
 
 typedef struct
   {
-    Z80_SUB_PORT sub;
-    int calleeSavesBC;
+    MC6809_SUB_PORT sub;
     int port_mode;
     int port_back;
     int reserveIY;
     int noOmitFramePtr;
-    int legacyBanking;
-    int nmosZ80;
   }
-Z80_OPTS;
+MC6809_OPTS;
 
-extern Z80_OPTS z80_opts;
+extern MC6809_OPTS mc6809_opts;
 
-#define IS_Z80 (z80_opts.sub == SUB_Z80)
-#define IS_Z180 (z80_opts.sub == SUB_Z180)
-#define IS_R2K (z80_opts.sub == SUB_R2K)
-#define IS_R3KA (z80_opts.sub == SUB_R3KA)
-#define IS_RAB (IS_R2K || IS_R3KA)
-#define IS_GB (z80_opts.sub == SUB_GBZ80)
-#define IS_TLCS90 (z80_opts.sub == SUB_TLCS90)
-#define IS_EZ80_Z80 (z80_opts.sub == SUB_EZ80_Z80)
-#define IS_Z80N (z80_opts.sub == SUB_Z80N)
+#define IS_MC6809 (mc6809_opts.sub == SUB_MC6809)
 
-#define IY_RESERVED (z80_opts.reserveIY)
+#define IY_RESERVED (mc6809_opts.reserveIY)
 
-#define OPTRALLOC_HL 1
-#define OPTRALLOC_IY !(IY_RESERVED || IS_GB)
+#define OPTRALLOC_IY !(IY_RESERVED)
 
 enum
   {
@@ -56,4 +38,3 @@ enum
     ACCUSE_SCRATCH,
     ACCUSE_IY
   };
-
