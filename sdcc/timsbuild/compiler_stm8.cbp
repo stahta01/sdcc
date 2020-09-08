@@ -1,0 +1,378 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="Compiler stm8" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="frontend">
+				<Option output="bin_stm8/Release/frontend" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="" />
+				<Option object_output="obj_stm8/frontend/" />
+				<Option type="2" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O2" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+				</Linker>
+			</Target>
+			<Target title="backend">
+				<Option output="bin_stm8/Release/backend" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="" />
+				<Option object_output="obj_stm8/backend/" />
+				<Option type="2" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O2" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+				</Linker>
+			</Target>
+			<Target title="main">
+				<Option output="bin_stm8/Release/stm8" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj_stm8/Release/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O2" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+					<Add library="frontend" />
+					<Add library="backend" />
+					<Add directory="$(TARGET_OUTPUT_DIR)" />
+				</Linker>
+			</Target>
+		</Build>
+		<VirtualTargets>
+			<Add alias="All" targets="frontend;backend;main;" />
+		</VirtualTargets>
+		<Compiler>
+			<Add option="-Wall" />
+			<Add option="-fexceptions" />
+			<Add option="-Wno-parentheses" />
+			<Add option="-D__USE_MINGW_ANSI_STDIO=1" />
+			<Add option="-DOPT_DISABLE_STM8=0" />
+			<Add directory="../src" />
+			<Add directory="../support/util" />
+			<Add directory="src" />
+			<Add directory="../timsbuild" />
+		</Compiler>
+		<Unit filename="../src/SDCCBBlock.c">
+			<Option compilerVar="CC" />
+			<Option target="frontend" />
+		</Unit>
+		<Unit filename="../src/SDCCBBlock.h">
+			<Option target="frontend" />
+		</Unit>
+		<Unit filename="../src/SDCCargs.h">
+			<Option target="frontend" />
+		</Unit>
+		<Unit filename="../src/SDCCasm.c">
+			<Option compilerVar="CC" />
+			<Option target="frontend" />
+		</Unit>
+		<Unit filename="../src/SDCCasm.h">
+			<Option target="frontend" />
+		</Unit>
+		<Unit filename="../src/SDCCast.c">
+			<Option compilerVar="CC" />
+			<Option target="frontend" />
+		</Unit>
+		<Unit filename="../src/SDCCast.h">
+			<Option target="frontend" />
+		</Unit>
+		<Unit filename="../src/SDCCbitv.c">
+			<Option compilerVar="CC" />
+			<Option target="frontend" />
+		</Unit>
+		<Unit filename="../src/SDCCbitv.h">
+			<Option target="frontend" />
+		</Unit>
+		<Unit filename="../src/SDCCbtree.cc">
+			<Option target="main" />
+		</Unit>
+		<Unit filename="../src/SDCCbtree.h">
+			<Option target="frontend" />
+		</Unit>
+		<Unit filename="../src/SDCCcflow.c">
+			<Option compilerVar="CC" />
+			<Option target="frontend" />
+		</Unit>
+		<Unit filename="../src/SDCCcflow.h">
+			<Option target="frontend" />
+		</Unit>
+		<Unit filename="../src/SDCCcse.c">
+			<Option compilerVar="CC" />
+			<Option target="frontend" />
+		</Unit>
+		<Unit filename="../src/SDCCcse.h">
+			<Option target="frontend" />
+		</Unit>
+		<Unit filename="../src/SDCCdebug.c">
+			<Option compilerVar="CC" />
+			<Option target="frontend" />
+		</Unit>
+		<Unit filename="../src/SDCCdebug.h">
+			<Option target="frontend" />
+		</Unit>
+		<Unit filename="../src/SDCCdflow.c">
+			<Option compilerVar="CC" />
+			<Option target="frontend" />
+		</Unit>
+		<Unit filename="../src/SDCCdflow.h">
+			<Option target="frontend" />
+		</Unit>
+		<Unit filename="../src/SDCCdwarf2.c">
+			<Option compilerVar="CC" />
+			<Option target="main" />
+		</Unit>
+		<Unit filename="../src/SDCCdwarf2.h">
+			<Option target="frontend" />
+		</Unit>
+		<Unit filename="../src/SDCCerr.c">
+			<Option compilerVar="CC" />
+			<Option target="frontend" />
+		</Unit>
+		<Unit filename="../src/SDCCerr.h">
+			<Option target="frontend" />
+		</Unit>
+		<Unit filename="../src/SDCCgen.c">
+			<Option compilerVar="CC" />
+			<Option target="frontend" />
+		</Unit>
+		<Unit filename="../src/SDCCgen.h">
+			<Option target="frontend" />
+		</Unit>
+		<Unit filename="../src/SDCCglobl.h">
+			<Option target="frontend" />
+		</Unit>
+		<Unit filename="../src/SDCCglue.c">
+			<Option compilerVar="CC" />
+			<Option target="frontend" />
+		</Unit>
+		<Unit filename="../src/SDCCglue.h">
+			<Option target="frontend" />
+		</Unit>
+		<Unit filename="../src/SDCChasht.c">
+			<Option compilerVar="CC" />
+			<Option target="frontend" />
+		</Unit>
+		<Unit filename="../src/SDCChasht.h">
+			<Option target="frontend" />
+		</Unit>
+		<Unit filename="../src/SDCCicode.c">
+			<Option compilerVar="CC" />
+			<Option target="frontend" />
+		</Unit>
+		<Unit filename="../src/SDCCicode.h">
+			<Option target="frontend" />
+		</Unit>
+		<Unit filename="../src/SDCClabel.c">
+			<Option compilerVar="CC" />
+			<Option target="frontend" />
+		</Unit>
+		<Unit filename="../src/SDCClabel.h">
+			<Option target="frontend" />
+		</Unit>
+		<Unit filename="../src/SDCCloop.c">
+			<Option compilerVar="CC" />
+			<Option target="frontend" />
+		</Unit>
+		<Unit filename="../src/SDCCloop.h">
+			<Option target="frontend" />
+		</Unit>
+		<Unit filename="../src/SDCClospre.cc">
+			<Option target="frontend" />
+		</Unit>
+		<Unit filename="../src/SDCClospre.hpp">
+			<Option target="frontend" />
+		</Unit>
+		<Unit filename="../src/SDCClrange.c">
+			<Option compilerVar="CC" />
+			<Option target="frontend" />
+		</Unit>
+		<Unit filename="../src/SDCClrange.h">
+			<Option target="frontend" />
+		</Unit>
+		<Unit filename="../src/SDCCmacro.c">
+			<Option compilerVar="CC" />
+			<Option target="frontend" />
+		</Unit>
+		<Unit filename="../src/SDCCmacro.h">
+			<Option target="frontend" />
+		</Unit>
+		<Unit filename="../src/SDCCmain.c">
+			<Option compilerVar="CC" />
+			<Option target="main" />
+		</Unit>
+		<Unit filename="../src/SDCCmem.c">
+			<Option compilerVar="CC" />
+			<Option target="frontend" />
+		</Unit>
+		<Unit filename="../src/SDCCmem.h">
+			<Option target="frontend" />
+		</Unit>
+		<Unit filename="../src/SDCCnaddr.cc">
+			<Option target="frontend" />
+		</Unit>
+		<Unit filename="../src/SDCCnaddr.hpp">
+			<Option target="frontend" />
+		</Unit>
+		<Unit filename="../src/SDCCopt.c">
+			<Option compilerVar="CC" />
+			<Option target="frontend" />
+		</Unit>
+		<Unit filename="../src/SDCCopt.h">
+			<Option target="frontend" />
+		</Unit>
+		<Unit filename="../src/SDCCpeeph.awk">
+			<Option target="frontend" />
+		</Unit>
+		<Unit filename="../src/SDCCpeeph.c">
+			<Option compilerVar="CC" />
+			<Option target="main" />
+		</Unit>
+		<Unit filename="../src/SDCCpeeph.h">
+			<Option target="frontend" />
+		</Unit>
+		<Unit filename="../src/SDCCptropt.c">
+			<Option compilerVar="CC" />
+			<Option target="frontend" />
+		</Unit>
+		<Unit filename="../src/SDCCptropt.h">
+			<Option target="frontend" />
+		</Unit>
+		<Unit filename="../src/SDCCset.c">
+			<Option compilerVar="CC" />
+			<Option target="frontend" />
+		</Unit>
+		<Unit filename="../src/SDCCset.h">
+			<Option target="frontend" />
+		</Unit>
+		<Unit filename="../src/SDCCsymt.c">
+			<Option compilerVar="CC" />
+			<Option target="main" />
+		</Unit>
+		<Unit filename="../src/SDCCsymt.h">
+			<Option target="frontend" />
+		</Unit>
+		<Unit filename="../src/SDCCsystem.c">
+			<Option compilerVar="CC" />
+			<Option target="frontend" />
+		</Unit>
+		<Unit filename="../src/SDCCsystem.h">
+			<Option target="frontend" />
+		</Unit>
+		<Unit filename="../src/SDCCutil.c">
+			<Option compilerVar="CC" />
+			<Option target="frontend" />
+		</Unit>
+		<Unit filename="../src/SDCCutil.h">
+			<Option target="frontend" />
+		</Unit>
+		<Unit filename="../src/SDCCval.c">
+			<Option compilerVar="CC" />
+			<Option target="frontend" />
+		</Unit>
+		<Unit filename="../src/SDCCval.h">
+			<Option target="frontend" />
+		</Unit>
+		<Unit filename="../src/cdbFile.c">
+			<Option compilerVar="CC" />
+			<Option target="frontend" />
+		</Unit>
+		<Unit filename="../src/common.h">
+			<Option target="frontend" />
+		</Unit>
+		<Unit filename="../src/stm8/gen.c">
+			<Option compilerVar="CC" />
+			<Option weight="40" />
+			<Option target="backend" />
+		</Unit>
+		<Unit filename="../src/stm8/gen.h">
+			<Option target="frontend" />
+		</Unit>
+		<Unit filename="../src/stm8/main.c">
+			<Option compilerVar="CC" />
+			<Option weight="40" />
+			<Option target="backend" />
+		</Unit>
+		<Unit filename="../src/stm8/peep.c">
+			<Option compilerVar="CC" />
+			<Option weight="40" />
+			<Option target="backend" />
+		</Unit>
+		<Unit filename="../src/stm8/peep.h">
+			<Option target="frontend" />
+		</Unit>
+		<Unit filename="../src/stm8/peeph.def">
+			<Option compilerVar="AWK" />
+			<Option compile="1" />
+			<Option weight="0" />
+			<Option compiler="gcc" use="1" buildCommand="sh.exe -c &apos;gawk -f ../src/SDCCpeeph.awk $file &gt; $file_name.rul&apos;" />
+			<Option target="backend" />
+		</Unit>
+		<Unit filename="../src/stm8/ralloc.c">
+			<Option compilerVar="CC" />
+			<Option weight="40" />
+			<Option target="backend" />
+		</Unit>
+		<Unit filename="../src/stm8/ralloc.h">
+			<Option target="frontend" />
+		</Unit>
+		<Unit filename="../src/stm8/ralloc2.cc">
+			<Option weight="40" />
+			<Option target="backend" />
+		</Unit>
+		<Unit filename="../src/stm8/reg_index.h">
+			<Option target="frontend" />
+		</Unit>
+		<Unit filename="../src/port.h">
+			<Option target="main" />
+		</Unit>
+		<Unit filename="../src/version.awk">
+			<Option target="frontend" />
+		</Unit>
+		<Unit filename="../support/util/NewAlloc.c">
+			<Option compilerVar="CC" />
+			<Option target="frontend" />
+		</Unit>
+		<Unit filename="../support/util/dbuf.c">
+			<Option compilerVar="CC" />
+			<Option target="frontend" />
+		</Unit>
+		<Unit filename="../support/util/dbuf.h">
+			<Option target="frontend" />
+		</Unit>
+		<Unit filename="../support/util/dbuf_string.c">
+			<Option compilerVar="CC" />
+			<Option target="frontend" />
+		</Unit>
+		<Unit filename="../support/util/dbuf_string.h">
+			<Option target="frontend" />
+		</Unit>
+		<Unit filename="../support/util/newalloc.h">
+			<Option target="frontend" />
+		</Unit>
+		<Unit filename="src/SDCClex.c">
+			<Option compilerVar="CC" />
+			<Option target="frontend" />
+		</Unit>
+		<Unit filename="src/SDCCy.c">
+			<Option compilerVar="CC" />
+			<Option target="frontend" />
+		</Unit>
+		<Unit filename="src/SDCCy.h">
+			<Option target="frontend" />
+		</Unit>
+		<Unit filename="src/version.h">
+			<Option target="frontend" />
+		</Unit>
+		<Extensions />
+	</Project>
+</CodeBlocks_project_file>
