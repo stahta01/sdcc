@@ -41,7 +41,15 @@
    are accepted by gcc versions 2.6.4 (effectively 2.7) and later.  */
 #ifndef ATTRIBUTE_PRINTF
 # if __GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ >= 7)
-#  define ATTRIBUTE_PRINTF(m, n) __attribute__ ((__format__ (__printf__, m, n))) ATTRIBUTE_NONNULL(m)
+#   ifndef _WIN32
+#     define ATTRIBUTE_PRINTF(m, n) __attribute__ ((__format__ (__printf__, m, n))) ATTRIBUTE_NONNULL(m)
+#   else
+#     if defined(__USE_MINGW_ANSI_STDIO) && __USE_MINGW_ANSI_STDIO != 0
+#       define ATTRIBUTE_PRINTF(m, n) __attribute__ ((__format__ (__gnu_printf__, m, n))) ATTRIBUTE_NONNULL(m)
+#     else
+#       define ATTRIBUTE_PRINTF(m, n) __attribute__ ((__format__ (__ms_printf__, m, n))) ATTRIBUTE_NONNULL(m)
+#     endif
+#   endif
 #else
 #  define ATTRIBUTE_PRINTF(m, n)
 # endif /* GNUC >= 2.7 */
