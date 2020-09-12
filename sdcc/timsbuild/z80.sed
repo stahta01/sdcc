@@ -1,0 +1,1 @@
+s/#define OPT_DISABLE_Z80 1/#define OPT_DISABLE_Z80 0/

@@ -1,0 +1,1 @@
+s/#define OPT_DISABLE_HC08 1/#define OPT_DISABLE_HC08 0/
