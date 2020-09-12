@@ -1,0 +1,1 @@
+s/#define OPT_DISABLE_MC6809 1/#define OPT_DISABLE_MC6809 0/

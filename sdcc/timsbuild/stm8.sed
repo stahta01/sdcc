@@ -1,0 +1,1 @@
+s/#define OPT_DISABLE_STM8 1/#define OPT_DISABLE_STM8 0/
