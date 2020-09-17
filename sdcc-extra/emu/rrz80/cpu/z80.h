@@ -28,8 +28,8 @@
 #  define WORDS_BIGENDIAN
 #elif !defined(__LITTLE_ENDIAN__)
    /* try with types.h and endian.h */
-   /* Hack: GYGWIN doesn't have endian.h, but we know it is LITTLE ENDIAN */
-#  ifndef __CYGWIN__
+   /* Hack: CYGWIN and Windows doesn't have endian.h, but we know it is LITTLE ENDIAN */
+#  if !(defined(__CYGWIN__) || defined(_WIN32))
 #    include <sys/types.h>
 #    if defined(_BIG_ENDIAN)
 #      define WORDS_BIGENDIAN
