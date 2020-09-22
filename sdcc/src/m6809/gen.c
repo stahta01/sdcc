@@ -828,53 +828,6 @@ isPair (const asmop * aop)
   return (getPairId (aop) != PAIR_INVALID);
 }
 
-/** Returns TRUE if the registers used in aop cannot be split into high
-    and low halves */
-static bool
-isUnsplitable (const asmop * aop)
-{
-  switch (getPairId (aop))
-    {
-    case PAIR_IX:
-    case PAIR_IY:
-      return TRUE;
-    default:
-      return FALSE;
-    }
-  return FALSE;
-}
-
-static void
-spillPair (PAIR_ID pairId)
-{
-  _G.pairs[pairId].last_type = AOP_INVALID;
-  _G.pairs[pairId].base = NULL;
-}
-
-/* Given a register name, spill the pair (if any) the register is part of */
-static void
-spillPairReg (const char *regname)
-{
-  if (strlen (regname) == 1)
-    {
-      switch (*regname)
-        {
-        case 'h':
-        case 'l':
-          spillPair (PAIR_HL);
-          break;
-        case 'd':
-        case 'e':
-          spillPair (PAIR_DE);
-          break;
-        case 'b':
-        case 'c':
-          spillPair (PAIR_BC);
-          break;
-        }
-    }
-}
-
 static void
 _push (PAIR_ID pairId)
 {
@@ -1558,30 +1511,6 @@ isPtr (const char *s)
   return FALSE;
 }
 
-static void
-adjustPair (const char *pair, int *pold, int new_val)
-{
-  wassert (pair);
-
-  while (*pold < new_val)
-    {
-      emit2 ("inc %s", pair);
-      (*pold)++;
-    }
-  while (*pold > new_val)
-    {
-      emit2 ("dec %s", pair);
-      (*pold)--;
-    }
-}
-
-static void
-spillCached (void)
-{
-  spillPair (PAIR_HL);
-  spillPair (PAIR_IY);
-}
-
 static bool
 requiresHL (const asmop * aop)
 {
@@ -1782,34 +1711,6 @@ adjusted:
   _G.pairs[pairId].offset = offset;
   Safe_free (base_str);
   Safe_free (l);
-}
-
-static PAIR_ID
-makeFreePairId (const iCode * ic, bool *pisUsed)
-{
-  *pisUsed = FALSE;
-
-  if (ic != NULL)
-    {
-      if (!bitVectBitValue (ic->rMask, B_IDX) && !bitVectBitValue (ic->rMask, C_IDX))
-        {
-          return PAIR_BC;
-        }
-      else if (!IS_GB && !bitVectBitValue (ic->rMask, D_IDX) && !bitVectBitValue (ic->rMask, E_IDX))
-        {
-          return PAIR_DE;
-        }
-      else
-        {
-          *pisUsed = TRUE;
-          return PAIR_HL;
-        }
-    }
-  else
-    {
-      *pisUsed = TRUE;
-      return PAIR_HL;
-    }
 }
 
 /* If ic != 0, we can safely use isPairDead(). */
@@ -14538,14 +14439,6 @@ dryZ80iCode (iCode * ic)
   destroy_line_list ();
   freeTrace (&_G.trace.aops);
 
-  {
-    int pairId;
-    for (pairId = 0; pairId < NUM_PAIRS; pairId++)
-      {
-        spillPair (pairId);
-      }
-  }
-
   return (regalloc_dry_run_cost);
 }
 
@@ -14579,9 +14472,9 @@ genZ80Code (iCode * lic)
 
   initGenLineElement ();
 
-  memset (m6809_regs_used_as_parms_in_calls_from_current_function, 0, sizeof (bool) * (IYH_IDX + 1));
+  memset (m6809_regs_used_as_parms_in_calls_from_current_function, 0, sizeof (bool) * (MAX_TREE_DECOMP_IDX + 1));
   m6809_symmParm_in_calls_from_current_function = TRUE;
-  memset (m6809_regs_preserved_in_calls_from_current_function, 0, sizeof (bool) * (IYH_IDX + 1));
+  memset (m6809_regs_preserved_in_calls_from_current_function, 0, sizeof (bool) * (MAX_TREE_DECOMP_IDX + 1));
 
   /* if debug information required */
   if (options.debug && currFunc)
@@ -14645,14 +14538,6 @@ genZ80Code (iCode * lic)
         _G.flushStatics = 0;
       }
     codeOutBuf = buf;
-  }
-
-  {
-    int pairId;
-    for (pairId = 0; pairId < NUM_PAIRS; pairId++)
-      {
-        spillPair (pairId);
-      }
   }
 
   destroy_line_list ();
