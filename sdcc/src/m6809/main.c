@@ -23,7 +23,7 @@
 -------------------------------------------------------------------------*/
 
 #include <sys/stat.h>
-#include "z80.h"
+#include "m6809.h"
 #include "SDCCsystem.h"
 #include "SDCCutil.h"
 #include "SDCCargs.h"
