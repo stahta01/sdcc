@@ -45,33 +45,39 @@
 #define OPTION_LEGACY_BANKING  "--legacy-banking"
 #define OPTION_NMOS_Z80        "--nmos-z80"
 
-static char _z80_defaultRules[] = {
+static char _z80_defaultRules[] =
+{
 #include "peeph.rul"
 #include "peeph-z80.rul"
 };
 
-static char _r2k_defaultRules[] = {
+static char _r2k_defaultRules[] =
+{
 #include "peeph.rul"
 #include "peeph-r2k.rul"
 };
 
-static char _tlcs90_defaultRules[] = {
+static char _tlcs90_defaultRules[] =
+{
 #include "peeph.rul"
 #include "peeph-tlcs90.rul"
 };
 
-static char _gbz80_defaultRules[] = {
+static char _gbz80_defaultRules[] =
+{
 #include "peeph-gbz80.rul"
 #include "peeph.rul"
 };
 
-static char _ez80_z80_defaultRules[] = {
+static char _ez80_z80_defaultRules[] =
+{
 #include "peeph.rul"
 #include "peeph-z80.rul"
 #include "peeph-ez80_z80.rul"
 };
 
-static char _z80n_defaultRules[] = {
+static char _z80n_defaultRules[] =
+{
 #include "peeph.rul"
 #include "peeph-z80.rul"
 #include "peeph-z80n.rul"
@@ -80,32 +86,34 @@ static char _z80n_defaultRules[] = {
 
 Z80_OPTS z80_opts;
 
-static OPTION _z80_options[] = {
+static OPTION _z80_options[] =
+{
   {0, OPTION_CALLEE_SAVES_BC, &z80_opts.calleeSavesBC, "Force a called function to always save BC"},
-  {0, OPTION_PORTMODE,        NULL, "Determine PORT I/O mode (z80/z180)"},
-  {0, OPTION_ASM,             NULL, "Define assembler name (rgbds/asxxxx/isas/z80asm/gas)"},
-  {0, OPTION_CODE_SEG,        &options.code_seg, "<name> use this name for the code segment", CLAT_STRING},
-  {0, OPTION_CONST_SEG,       &options.const_seg, "<name> use this name for the const segment", CLAT_STRING},
-  {0, OPTION_DATA_SEG,        &options.data_seg, "<name> use this name for the data segment", CLAT_STRING},
-  {0, OPTION_NO_STD_CRT0,     &options.no_std_crt0, "For the z80/gbz80 do not link default crt0.rel"},
-  {0, OPTION_RESERVE_IY,      &z80_opts.reserveIY, "Do not use IY (incompatible with --fomit-frame-pointer)"},
-  {0, OPTION_OLDRALLOC,       &options.oldralloc, "Use old register allocator"},
-  {0, OPTION_FRAMEPOINTER,    &z80_opts.noOmitFramePtr, "Do not omit frame pointer"},
-  {0, OPTION_EMIT_EXTERNS,    NULL, "Emit externs list in generated asm"},
-  {0, OPTION_LEGACY_BANKING,  &z80_opts.legacyBanking, "Use legacy method to call banked functions"},
-  {0, OPTION_NMOS_Z80,        &z80_opts.nmosZ80, "Generate workaround for NMOS Z80 when saving IFF2"},
+  {0, OPTION_PORTMODE, NULL, "Determine PORT I/O mode (z80/z180)"},
+  {0, OPTION_ASM, NULL, "Define assembler name (rgbds/asxxxx/isas/z80asm/gas)"},
+  {0, OPTION_CODE_SEG, &options.code_seg, "<name> use this name for the code segment", CLAT_STRING},
+  {0, OPTION_CONST_SEG, &options.const_seg, "<name> use this name for the const segment", CLAT_STRING},
+  {0, OPTION_DATA_SEG, &options.data_seg, "<name> use this name for the data segment", CLAT_STRING},
+  {0, OPTION_NO_STD_CRT0, &options.no_std_crt0, "For the z80/gbz80 do not link default crt0.rel"},
+  {0, OPTION_RESERVE_IY, &z80_opts.reserveIY, "Do not use IY (incompatible with --fomit-frame-pointer)"},
+  {0, OPTION_OLDRALLOC, &options.oldralloc, "Use old register allocator"},
+  {0, OPTION_FRAMEPOINTER, &z80_opts.noOmitFramePtr, "Do not omit frame pointer"},
+  {0, OPTION_EMIT_EXTERNS, NULL, "Emit externs list in generated asm"},
+  {0, OPTION_LEGACY_BANKING, &z80_opts.legacyBanking, "Use legacy method to call banked functions"},
+  {0, OPTION_NMOS_Z80, &z80_opts.nmosZ80, "Generate workaround for NMOS Z80 when saving IFF2"},
   {0, NULL}
 };
 
-static OPTION _gbz80_options[] = {
-  {0, OPTION_BO,              NULL, "<num> use code bank <num>"},
-  {0, OPTION_BA,              NULL, "<num> use data bank <num>"},
+static OPTION _gbz80_options[] =
+{
+  {0, OPTION_BO, NULL, "<num> use code bank <num>"},
+  {0, OPTION_BA, NULL, "<num> use data bank <num>"},
   {0, OPTION_CALLEE_SAVES_BC, &z80_opts.calleeSavesBC, "Force a called function to always save BC"},
-  {0, OPTION_CODE_SEG,        &options.code_seg, "<name> use this name for the code segment", CLAT_STRING},
-  {0, OPTION_CONST_SEG,       &options.const_seg, "<name> use this name for the const segment", CLAT_STRING},
-  {0, OPTION_DATA_SEG,        &options.data_seg, "<name> use this name for the data segment", CLAT_STRING},
-  {0, OPTION_NO_STD_CRT0,     &options.no_std_crt0, "For the z80/gbz80 do not link default crt0.rel"},
-  {0, OPTION_LEGACY_BANKING,  &z80_opts.legacyBanking, "Use legacy method to call banked functions"},
+  {0, OPTION_CODE_SEG, &options.code_seg, "<name> use this name for the code segment", CLAT_STRING},
+  {0, OPTION_CONST_SEG, &options.const_seg, "<name> use this name for the const segment", CLAT_STRING},
+  {0, OPTION_DATA_SEG, &options.data_seg, "<name> use this name for the data segment", CLAT_STRING},
+  {0, OPTION_NO_STD_CRT0, &options.no_std_crt0, "For the z80/gbz80 do not link default crt0.rel"},
+  {0, OPTION_LEGACY_BANKING, &z80_opts.legacyBanking, "Use legacy method to call banked functions"},
   {0, NULL}
 };
 
@@ -129,7 +137,8 @@ static struct
 }
 _G;
 
-static char *_keywords[] = {
+static char *_keywords[] =
+{
   "sfr",
   "nonbanked",
   "banked",
@@ -145,7 +154,8 @@ static char *_keywords[] = {
   NULL
 };
 
-static char *_keywordsgb[] = {
+static char *_keywordsgb[] =
+{
   "sfr",
   "nonbanked",
   "banked",
@@ -158,7 +168,8 @@ static char *_keywordsgb[] = {
   NULL
 };
 
-static char *_keywordstlcs90[] = {
+static char *_keywordstlcs90[] =
+{
   "nonbanked",
   "banked",
   "at",
@@ -177,7 +188,8 @@ extern PORT gbz80_port;
 
 #include "mappings.i"
 
-static builtins _z80_builtins[] = {
+static builtins _z80_builtins[] =
+{
   {"__builtin_memcpy", "vg*", 3, {"vg*", "Cvg*", "Ui"}},
   {"__builtin_strcpy", "cg*", 2, {"cg*", "Ccg*"}},
   {"__builtin_strncpy", "cg*", 3, {"cg*", "Ccg*", "Ui"}},
@@ -271,22 +283,28 @@ _reset_regparm (struct sym_link *funcType)
   _G.regParams = 0;
   _G.z88dk_fastcall = IFFUNC_ISZ88DK_FASTCALL (funcType);
   if (_G.z88dk_fastcall && IFFUNC_HASVARARGS (funcType))
-    werror (E_Z88DK_FASTCALL_PARAMETERS);
+    {
+      werror (E_Z88DK_FASTCALL_PARAMETERS);
+    }
 }
 
 static int
-_reg_parm (sym_link *l, bool reentrant)
+_reg_parm (sym_link * l, bool reentrant)
 {
   if (_G.z88dk_fastcall)
     {
       if (_G.regParams)
-        werror (E_Z88DK_FASTCALL_PARAMETERS);
+        {
+          werror (E_Z88DK_FASTCALL_PARAMETERS);
+        }
       if (getSize (l) > 4)
-        werror (E_Z88DK_FASTCALL_PARAMETER);
+        {
+          werror (E_Z88DK_FASTCALL_PARAMETER);
+        }
       _G.regParams++;
       return TRUE;
     }
- return FALSE;
+  return FALSE;
 }
 
 enum
@@ -309,143 +327,150 @@ do_pragma (int id, const char *name, const char *cp)
   switch (id)
     {
     case P_BANK:
-      {
-        struct dbuf_s buffer;
+    {
+      struct dbuf_s buffer;
 
-        dbuf_init (&buffer, 128);
+      dbuf_init (&buffer, 128);
 
-        cp = get_pragma_token (cp, &token);
+      cp = get_pragma_token (cp, &token);
 
-        switch (token.type)
-          {
-          case TOKEN_EOL:
-            err = 1;
-            break;
+      switch (token.type)
+        {
+        case TOKEN_EOL:
+          err = 1;
+          break;
 
-          case TOKEN_INT:
-            switch (_G.asmType)
-              {
-              case ASM_TYPE_ASXXXX:
-                dbuf_printf (&buffer, "CODE_%d", token.val.int_val);
-                break;
-
-              case ASM_TYPE_RGBDS:
-                dbuf_printf (&buffer, "ROMX,BANK[%d]", token.val.int_val);
-                break;
-
-              case ASM_TYPE_ISAS:
-                /* PENDING: what to use for ISAS? */
-                dbuf_printf (&buffer, "CODE,BANK(%d)", token.val.int_val);
-                break;
-
-              case ASM_TYPE_GAS:
-                dbuf_printf (&buffer, ".ovly%04x", token.val.int_val);
-                break;
-
-              default:
-                wassert (0);
-              }
-            break;
-
-          default:
+        case TOKEN_INT:
+          switch (_G.asmType)
             {
-              const char *str = get_pragma_string (&token);
+            case ASM_TYPE_ASXXXX:
+              dbuf_printf (&buffer, "CODE_%d", token.val.int_val);
+              break;
 
-              dbuf_append_str (&buffer, (0 == strcmp ("BASE", str)) ? "HOME" : str);
+            case ASM_TYPE_RGBDS:
+              dbuf_printf (&buffer, "ROMX,BANK[%d]", token.val.int_val);
+              break;
+
+            case ASM_TYPE_ISAS:
+              /* PENDING: what to use for ISAS? */
+              dbuf_printf (&buffer, "CODE,BANK(%d)", token.val.int_val);
+              break;
+
+            case ASM_TYPE_GAS:
+              dbuf_printf (&buffer, ".ovly%04x", token.val.int_val);
+              break;
+
+            default:
+              wassert (0);
             }
-            break;
-          }
+          break;
 
-        cp = get_pragma_token (cp, &token);
-        if (TOKEN_EOL != token.type)
-          {
-            err = 1;
-            break;
-          }
+        default:
+        {
+          const char *str = get_pragma_string (&token);
 
-        dbuf_c_str (&buffer);
-        options.code_seg = (char *) dbuf_detach (&buffer);
-      }
-      break;
+          dbuf_append_str (&buffer, (0 == strcmp ("BASE", str)) ? "HOME" : str);
+        }
+        break;
+        }
+
+      cp = get_pragma_token (cp, &token);
+      if (TOKEN_EOL != token.type)
+        {
+          err = 1;
+          break;
+        }
+
+      dbuf_c_str (&buffer);
+      options.code_seg = (char *) dbuf_detach (&buffer);
+    }
+    break;
 
     case P_PORTMODE:
-      {                         /*.p.t.20030716 - adding pragma to manipulate z80 i/o port addressing modes */
-        const char *str;
+    {
+      /*.p.t.20030716 - adding pragma to manipulate z80 i/o port addressing modes */
+      const char *str;
 
-        cp = get_pragma_token (cp, &token);
+      cp = get_pragma_token (cp, &token);
 
-        if (TOKEN_EOL == token.type)
-          {
-            err = 1;
-            break;
-          }
-
-        str = get_pragma_string (&token);
-
-        cp = get_pragma_token (cp, &token);
-        if (TOKEN_EOL != token.type)
-          {
-            err = 1;
-            break;
-          }
-
-        if (!strcmp (str, "z80"))
-          {
-            z80_opts.port_mode = 80;
-          }
-        else if (!strcmp (str, "z180"))
-          {
-            z80_opts.port_mode = 180;
-          }
-        else if (!strcmp (str, "save"))
-          {
-            z80_opts.port_back = z80_opts.port_mode;
-          }
-        else if (!strcmp (str, "restore"))
-          {
-            z80_opts.port_mode = z80_opts.port_back;
-          }
-        else
+      if (TOKEN_EOL == token.type)
+        {
           err = 1;
-      }
-      break;
+          break;
+        }
+
+      str = get_pragma_string (&token);
+
+      cp = get_pragma_token (cp, &token);
+      if (TOKEN_EOL != token.type)
+        {
+          err = 1;
+          break;
+        }
+
+      if (!strcmp (str, "z80"))
+        {
+          z80_opts.port_mode = 80;
+        }
+      else if (!strcmp (str, "z180"))
+        {
+          z80_opts.port_mode = 180;
+        }
+      else if (!strcmp (str, "save"))
+        {
+          z80_opts.port_back = z80_opts.port_mode;
+        }
+      else if (!strcmp (str, "restore"))
+        {
+          z80_opts.port_mode = z80_opts.port_back;
+        }
+      else
+        {
+          err = 1;
+        }
+    }
+    break;
 
     case P_CODESEG:
     case P_CONSTSEG:
-      {
-        char *segname;
+    {
+      char *segname;
 
-        cp = get_pragma_token (cp, &token);
-        if (token.type == TOKEN_EOL)
-          {
-            err = 1;
-            break;
-          }
+      cp = get_pragma_token (cp, &token);
+      if (token.type == TOKEN_EOL)
+        {
+          err = 1;
+          break;
+        }
 
-        segname = Safe_strdup (get_pragma_string (&token));
+      segname = Safe_strdup (get_pragma_string (&token));
 
-        cp = get_pragma_token (cp, &token);
-        if (token.type != TOKEN_EOL)
-          {
-            Safe_free (segname);
-            err = 1;
-            break;
-          }
+      cp = get_pragma_token (cp, &token);
+      if (token.type != TOKEN_EOL)
+        {
+          Safe_free (segname);
+          err = 1;
+          break;
+        }
 
-        if (id == P_CODESEG)
-          {
-            if (options.code_seg)
+      if (id == P_CODESEG)
+        {
+          if (options.code_seg)
+            {
               Safe_free (options.code_seg);
-            options.code_seg = segname;
-          }
-        else
-          {
-            if (options.const_seg)
+            }
+          options.code_seg = segname;
+        }
+      else
+        {
+          if (options.const_seg)
+            {
               Safe_free (options.const_seg);
-            options.const_seg = segname;
-          }
-      }
-      break;
+            }
+          options.const_seg = segname;
+        }
+    }
+    break;
 
     default:
       processed = 0;
@@ -455,13 +480,16 @@ do_pragma (int id, const char *name, const char *cp)
   get_pragma_token (cp, &token);
 
   if (1 == err)
-    werror (W_BAD_PRAGMA_ARGUMENTS, name);
+    {
+      werror (W_BAD_PRAGMA_ARGUMENTS, name);
+    }
 
   free_pragma_token (&token);
   return processed;
 }
 
-static struct pragma_s pragma_tbl[] = {
+static struct pragma_s pragma_tbl[] =
+{
   {"bank", P_BANK, 0, do_pragma},
   {"portmode", P_PORTMODE, 0, do_pragma},
   {"codeseg", P_CODESEG, 0, do_pragma},
@@ -475,11 +503,13 @@ _process_pragma (const char *s)
   return process_pragma_tbl (pragma_tbl, s);
 }
 
-static const char *_gbz80_rgbasmCmd[] = {
+static const char *_gbz80_rgbasmCmd[] =
+{
   "rgbasm", "-o$1.rel", "$1.asm", NULL
 };
 
-static const char *_gbz80_rgblinkCmd[] = {
+static const char *_gbz80_rgblinkCmd[] =
+{
   "xlink", "-tg", "-n$1.sym", "-m$1.map", "-zFF", "$1.lnk", NULL
 };
 
@@ -589,16 +619,20 @@ _parseOptions (int *pargc, char **argv, int *i)
               gbz80_port.linker.cmd = _gbz80_rgblinkCmd;
               gbz80_port.linker.do_link = _gbz80_rgblink;
 
-              if(!(options.code_seg && strcmp(options.code_seg, CODE_NAME)))
+              if (!(options.code_seg && strcmp (options.code_seg, CODE_NAME)))
                 {
                   if (options.code_seg)
-                    Safe_free (options.code_seg);
+                    {
+                      Safe_free (options.code_seg);
+                    }
                   options.code_seg = Safe_strdup ("ROMX");
                 }
-              if(!(options.data_seg && strcmp(options.data_seg, DATA_NAME)))
+              if (!(options.data_seg && strcmp (options.data_seg, DATA_NAME)))
                 {
                   if (options.data_seg)
-                    Safe_free (options.data_seg);
+                    {
+                      Safe_free (options.data_seg);
+                    }
                   options.data_seg = Safe_strdup ("WRAMX");
                 }
 
@@ -695,11 +729,15 @@ _setValues (void)
               break;
             }
           else
-            Safe_free (path);
+            {
+              Safe_free (path);
+            }
         }
 
       if (s == NULL)
-        setMainValue ("z80crt0", "\"crt0{objext}\"");
+        {
+          setMainValue ("z80crt0", "\"crt0{objext}\"");
+        }
       else
         {
           struct dbuf_s dbuf;
@@ -745,7 +783,9 @@ _setValues (void)
 
   /* For the old register allocator (with the new one we decide to omit the frame pointer for each function individually) */
   if (!IS_GB && options.omitFramePtr)
-    port->stack.call_overhead = 2;
+    {
+      port->stack.call_overhead = 2;
+    }
 }
 
 static void
@@ -769,7 +809,9 @@ _finaliseOptions (void)
       }
 
   if (IY_RESERVED)
-    port->num_regs -= 2;
+    {
+      port->num_regs -= 2;
+    }
 
   _setValues ();
 }
@@ -817,11 +859,13 @@ _mangleSupportFunctionName (const char *original)
   struct dbuf_s dbuf;
 
   if (strstr (original, "longlong"))
-    return (original);
+    {
+      return (original);
+    }
 
   dbuf_init (&dbuf, 128);
   dbuf_printf (&dbuf, "%s_rr%s_%s", original, options.profile ? "f" : "x", options.noRegParams ? "s" : "bds"    /* MB: but the library only has hds variants ??? */
-    );
+              );
 
   return dbuf_detach_c_str (&dbuf);
 }
@@ -842,31 +886,49 @@ static int
 _getRegByName (const char *name)
 {
   if (!strcmp (name, "a"))
-    return 0;
+    {
+      return 0;
+    }
   if (!strcmp (name, "c"))
-    return 1;
+    {
+      return 1;
+    }
   if (!strcmp (name, "b"))
-    return 2;
+    {
+      return 2;
+    }
   if (!strcmp (name, "e"))
-    return 3;
+    {
+      return 3;
+    }
   if (!strcmp (name, "d"))
-    return 4;
+    {
+      return 4;
+    }
   if (!strcmp (name, "l"))
-    return 5;
+    {
+      return 5;
+    }
   if (!strcmp (name, "h"))
-    return 6;
+    {
+      return 6;
+    }
   if (!strcmp (name, "iyl"))
-    return 7;
+    {
+      return 7;
+    }
   if (!strcmp (name, "iyh"))
-    return 8;
+    {
+      return 8;
+    }
   return -1;
 }
 
 static bool
-_hasNativeMulFor (iCode *ic, sym_link *left, sym_link *right)
+_hasNativeMulFor (iCode * ic, sym_link * left, sym_link * right)
 {
   sym_link *test = NULL;
-  int result_size = IS_SYMOP (IC_RESULT(ic)) ? getSize (OP_SYM_TYPE (IC_RESULT(ic))) : 4;
+  int result_size = IS_SYMOP (IC_RESULT (ic)) ? getSize (OP_SYM_TYPE (IC_RESULT (ic))) : 4;
 
   if (ic->op != '*')
     {
@@ -874,9 +936,13 @@ _hasNativeMulFor (iCode *ic, sym_link *left, sym_link *right)
     }
 
   if (IS_LITERAL (left))
-    test = left;
+    {
+      test = left;
+    }
   else if (IS_LITERAL (right))
-    test = right;
+    {
+      test = right;
+    }
   /* 8x8 unsigned multiplication code is shorter than
      call overhead for the multiplication routine. */
   else if (IS_CHAR (right) && IS_UNSIGNED (right) && IS_CHAR (left) && IS_UNSIGNED (left) && !IS_GB)
@@ -906,9 +972,13 @@ static bool
 hasExtBitOp (int op, int size)
 {
   if (op == GETHBIT)
-    return TRUE;
+    {
+      return TRUE;
+    }
   else
-    return FALSE;
+    {
+      return FALSE;
+    }
 }
 
 /* Indicate the expense of an access to an output storage class */
@@ -916,7 +986,9 @@ static int
 oclsExpense (struct memmap *oclass)
 {
   if (IN_FARSPACE (oclass))
-    return 1;
+    {
+      return 1;
+    }
 
   return 0;
 }
@@ -934,34 +1006,42 @@ oclsExpense (struct memmap *oclass)
     " {z80extraobj}"
 */
 
-static const char *_z80LinkCmd[] = {
+static const char *_z80LinkCmd[] =
+{
   "sdldz80", "-nf", "$1", NULL
 };
 
-static const char *_gbLinkCmd[] = {
+static const char *_gbLinkCmd[] =
+{
   "sdldgb", "-nf", "$1", NULL
 };
+
 /*
 static const char *_gnuLdCmd[] = {
   "z80-elf-ld", "", "$1", NULL
 };
 */
 /* $3 is replaced by assembler.debug_opts resp. port->assembler.plain_opts */
-static const char *_z80AsmCmd[] = {
+static const char *_z80AsmCmd[] =
+{
   "sdasz80", "$l", "$3", "$2", "$1.asm", NULL
 };
 
-static const char *_r2kAsmCmd[] = {
+static const char *_r2kAsmCmd[] =
+{
   "sdasrab", "$l", "$3", "$2", "$1.asm", NULL
 };
 
-static const char *_gbAsmCmd[] = {
+static const char *_gbAsmCmd[] =
+{
   "sdasgb", "$l", "$3", "$2", "$1.asm", NULL
 };
 
-static const char *_tlcs90AsmCmd[] = {
+static const char *_tlcs90AsmCmd[] =
+{
   "sdastlcs90", "$l", "$3", "$2", "$1.asm", NULL
 };
+
 /*
 static const char *_GnuAsmCmd[] = {
   "z80-elf-as", "$l", "$3", "$2", "$1.asm", NULL
@@ -989,24 +1069,24 @@ PORT z80_port =
     FALSE,
     NO_MODEL,
     NO_MODEL,
-    NULL,                       /* model == target */
+    NULL,                        /* model == target */
   },
   {                             /* Assembler */
     _z80AsmCmd,
     NULL,
-    "-plosgffwy",               /* Options with debug */
-    "-plosgffw",                /* Options without debug */
+    "-plosgffwy",                /* Options with debug */
+    "-plosgffw",                 /* Options without debug */
     0,
     ".asm"
   },
   {                             /* Linker */
-    _z80LinkCmd,                //NULL,
-    NULL,                       //LINKCMD,
+    _z80LinkCmd,                 //NULL,
+    NULL,                        //LINKCMD,
     NULL,
     ".rel",
-    1,                          /* needLinkerScript */
-    _crt,                       /* crt */
-    _libs_z80,                  /* libs */
+    1,                           /* needLinkerScript */
+    _crt,                        /* crt */
+    _libs_z80,                   /* libs */
   },
   {                             /* Peephole optimizer */
     _z80_defaultRules,
@@ -1022,47 +1102,47 @@ PORT z80_port =
     z80canSplitReg,
   },
   /* Sizes: char, short, int, long, long long, near ptr, far ptr, gptr, func ptr, banked func ptr, bit, float */
-  { 1, 2, 2, 4, 8, 2, 2, 2, 2, 2, 1, 4 },
+  {1, 2, 2, 4, 8, 2, 2, 2, 2, 2, 1, 4},
   /* tags for generic pointers */
-  { 0x00, 0x40, 0x60, 0x80 },   /* far, near, xstack, code */
+  {0x00, 0x40, 0x60, 0x80},     /* far, near, xstack, code */
   {
     "XSEG",
     "STACK",
     "CODE",
     "DATA",
-    NULL,                       /* idata */
-    NULL,                       /* pdata */
-    NULL,                       /* xdata */
-    NULL,                       /* bit */
+    NULL,                        /* idata */
+    NULL,                        /* pdata */
+    NULL,                        /* xdata */
+    NULL,                        /* bit */
     "RSEG (ABS)",
-    "GSINIT",                   /* static initialization */
-    NULL,                       /* overlay */
+    "GSINIT",                    /* static initialization */
+    NULL,                        /* overlay */
     "GSFINAL",
     "HOME",
-    NULL,                       /* xidata */
-    NULL,                       /* xinit */
-    NULL,                       /* const_name */
-    "CABS (ABS)",               /* cabs_name */
-    "DABS (ABS)",               /* xabs_name */
-    NULL,                       /* iabs_name */
-    "INITIALIZED",              /* name of segment for initialized variables */
-    "INITIALIZER",              /* name of segment for copies of initialized variables in code space */
+    NULL,                        /* xidata */
+    NULL,                        /* xinit */
+    NULL,                        /* const_name */
+    "CABS (ABS)",                /* cabs_name */
+    "DABS (ABS)",                /* xabs_name */
+    NULL,                        /* iabs_name */
+    "INITIALIZED",               /* name of segment for initialized variables */
+    "INITIALIZER",               /* name of segment for copies of initialized variables in code space */
     NULL,
     NULL,
-    1,                          /* CODE  is read-only */
-    1                           /* No fancy alignments supported. */
+    1,                           /* CODE  is read-only */
+    1                            /* No fancy alignments supported. */
   },
-  { NULL, NULL },
-  { -1, 0, 0, 4, 0, 3, 0 },
-  { -1, FALSE },
-  { z80_emitDebuggerSymbol },
+  {NULL, NULL},
+  {-1, 0, 0, 4, 0, 3, 0},
+  {-1, FALSE},
+  {z80_emitDebuggerSymbol},
   {
-    256,                        /* maxCount */
-    3,                          /* sizeofElement */
-    {6, 7, 8},                  /* sizeofMatchJump[] - Assumes operand allocated to registers */
-    {6, 9, 15},                 /* sizeofRangeCompare[] - Assumes operand allocated to registers*/
-    1,                          /* sizeofSubtract - Assumes use of a singel inc or dec */
-    9,                          /* sizeofDispatch - Assumes operand allocated to register e or c*/
+    256,                         /* maxCount */
+    3,                           /* sizeofElement */
+    {6, 7, 8},                   /* sizeofMatchJump[] - Assumes operand allocated to registers */
+    {6, 9, 15},                  /* sizeofRangeCompare[] - Assumes operand allocated to registers */
+    1,                           /* sizeofSubtract - Assumes use of a singel inc or dec */
+    9,                           /* sizeofDispatch - Assumes operand allocated to register e or c */
   },
   "_",
   _z80_init,
@@ -1110,31 +1190,31 @@ PORT z180_port =
 {
   TARGET_ID_Z180,
   "z180",
-  "Zilog Z180",                  /* Target name */
+  "Zilog Z180",                 /* Target name */
   NULL,                         /* Processor name */
   {
     glue,
     FALSE,
     NO_MODEL,
     NO_MODEL,
-    NULL,                       /* model == target */
+    NULL,                        /* model == target */
   },
   {                             /* Assembler */
     _z80AsmCmd,
     NULL,
-    "-plosgffwy",               /* Options with debug */
-    "-plosgffw",                /* Options without debug */
+    "-plosgffwy",                /* Options with debug */
+    "-plosgffw",                 /* Options without debug */
     0,
     ".asm"
   },
   {                             /* Linker */
-    _z80LinkCmd,                //NULL,
-    NULL,                       //LINKCMD,
+    _z80LinkCmd,                 //NULL,
+    NULL,                        //LINKCMD,
     NULL,
     ".rel",
     1,
-    _crt,                       /* crt */
-    _libs_z180,                 /* libs */
+    _crt,                        /* crt */
+    _libs_z180,                  /* libs */
   },
   {                             /* Peephole optimizer */
     _z80_defaultRules,
@@ -1150,47 +1230,47 @@ PORT z180_port =
     z80canSplitReg,
   },
   /* Sizes: char, short, int, long, long long, near ptr, far ptr, gptr, func ptr, banked func ptr, bit, float */
-  { 1, 2, 2, 4, 8, 2, 2, 2, 2, 2, 1, 4 },
+  {1, 2, 2, 4, 8, 2, 2, 2, 2, 2, 1, 4},
   /* tags for generic pointers */
-  { 0x00, 0x40, 0x60, 0x80 },   /* far, near, xstack, code */
+  {0x00, 0x40, 0x60, 0x80},     /* far, near, xstack, code */
   {
     "XSEG",
     "STACK",
     "CODE",
     "DATA",
-    NULL,                       /* idata */
-    NULL,                       /* pdata */
-    NULL,                       /* xdata */
-    NULL,                       /* bit */
+    NULL,                        /* idata */
+    NULL,                        /* pdata */
+    NULL,                        /* xdata */
+    NULL,                        /* bit */
     "RSEG (ABS)",
     "GSINIT",
-    NULL,                       /* overlay */
+    NULL,                        /* overlay */
     "GSFINAL",
     "HOME",
-    NULL,                       /* xidata */
-    NULL,                       /* xinit */
-    NULL,                       /* const_name */
-    "CABS (ABS)",               /* cabs_name */
-    "DABS (ABS)",               /* xabs_name */
-    NULL,                       /* iabs_name */
-    "INITIALIZED",              /* name of segment for initialized variables */
-    "INITIALIZER",              /* name of segment for copies of initialized variables in code space */
+    NULL,                        /* xidata */
+    NULL,                        /* xinit */
+    NULL,                        /* const_name */
+    "CABS (ABS)",                /* cabs_name */
+    "DABS (ABS)",                /* xabs_name */
+    NULL,                        /* iabs_name */
+    "INITIALIZED",               /* name of segment for initialized variables */
+    "INITIALIZER",               /* name of segment for copies of initialized variables in code space */
     NULL,
     NULL,
-    1,                          /* CODE  is read-only */
-    1                           /* No fancy alignments supported. */
+    1,                           /* CODE  is read-only */
+    1                            /* No fancy alignments supported. */
   },
-  { NULL, NULL },
-  { -1, 0, 0, 4, 0, 3, 0 },
-  { -1, FALSE },
-  { z80_emitDebuggerSymbol },
+  {NULL, NULL},
+  {-1, 0, 0, 4, 0, 3, 0},
+  {-1, FALSE},
+  {z80_emitDebuggerSymbol},
   {
-    256,                        /* maxCount */
-    3,                          /* sizeofElement */
-    {6, 7, 8},                  /* sizeofMatchJump[] - Assumes operand allocated to registers */
-    {6, 9, 15},                 /* sizeofRangeCompare[] - Assumes operand allocated to registers*/
-    1,                          /* sizeofSubtract - Assumes use of a singel inc or dec */
-    9,                          /* sizeofDispatch - Assumes operand allocated to register e or c*/
+    256,                         /* maxCount */
+    3,                           /* sizeofElement */
+    {6, 7, 8},                   /* sizeofMatchJump[] - Assumes operand allocated to registers */
+    {6, 9, 15},                  /* sizeofRangeCompare[] - Assumes operand allocated to registers */
+    1,                           /* sizeofSubtract - Assumes use of a singel inc or dec */
+    9,                           /* sizeofDispatch - Assumes operand allocated to register e or c */
   },
   "_",
   _z180_init,
@@ -1245,23 +1325,24 @@ PORT r2k_port =
     FALSE,
     NO_MODEL,
     NO_MODEL,
-    NULL,                       /* model == target */
+    NULL,                        /* model == target */
   },
   {                             /* Assembler */
     _r2kAsmCmd,
     NULL,
-    "-plosgffwy",               /* Options with debug */
-    "-plosgffw",                /* Options without debug */
+    "-plosgffwy",                /* Options with debug */
+    "-plosgffw",                 /* Options without debug */
     0,
-    ".asm"},
+    ".asm"
+  },
   {                             /* Linker */
-    _z80LinkCmd,                //NULL,
-    NULL,                       //LINKCMD,
+    _z80LinkCmd,                 //NULL,
+    NULL,                        //LINKCMD,
     NULL,
     ".rel",
     1,
-    _crt,                       /* crt */
-    _libs_r2k,                  /* libs */
+    _crt,                        /* crt */
+    _libs_r2k,                   /* libs */
   },
   {                             /* Peephole optimizer */
     _r2k_defaultRules,
@@ -1277,47 +1358,47 @@ PORT r2k_port =
     z80canSplitReg,
   },
   /* Sizes: char, short, int, long, long long, near ptr, far ptr, gptr, func ptr, banked func ptr, bit, float */
-  { 1, 2, 2, 4, 8, 2, 2, 2, 2, 2, 1, 4 },
+  {1, 2, 2, 4, 8, 2, 2, 2, 2, 2, 1, 4},
   /* tags for generic pointers */
-  { 0x00, 0x40, 0x60, 0x80 },   /* far, near, xstack, code */
+  {0x00, 0x40, 0x60, 0x80},     /* far, near, xstack, code */
   {
     "XSEG",
     "STACK",
     "CODE",
     "DATA",
-    NULL,                       /* idata */
-    NULL,                       /* pdata */
-    NULL,                       /* xdata */
-    NULL,                       /* bit */
+    NULL,                        /* idata */
+    NULL,                        /* pdata */
+    NULL,                        /* xdata */
+    NULL,                        /* bit */
     "RSEG (ABS)",
     "GSINIT",
-    NULL,                       /* overlay */
+    NULL,                        /* overlay */
     "GSFINAL",
     "HOME",
-    NULL,                       /* xidata */
-    NULL,                       /* xinit */
-    NULL,                       /* const_name */
-    "CABS (ABS)",               /* cabs_name */
-    "DABS (ABS)",               /* xabs_name */
-    NULL,                       /* iabs_name */
-    "INITIALIZED",              /* name of segment for initialized variables */
-    "INITIALIZER",              /* name of segment for copies of initialized variables in code space */
+    NULL,                        /* xidata */
+    NULL,                        /* xinit */
+    NULL,                        /* const_name */
+    "CABS (ABS)",                /* cabs_name */
+    "DABS (ABS)",                /* xabs_name */
+    NULL,                        /* iabs_name */
+    "INITIALIZED",               /* name of segment for initialized variables */
+    "INITIALIZER",               /* name of segment for copies of initialized variables in code space */
     NULL,
     NULL,
-    1,                          /* CODE  is read-only */
-    1                           /* No fancy alignments supported. */
+    1,                           /* CODE  is read-only */
+    1                            /* No fancy alignments supported. */
   },
-  { NULL, NULL },
-  { -1, 0, 0, 4, 0, 2, 0 },
-  { -1, FALSE },
-  { z80_emitDebuggerSymbol },
+  {NULL, NULL},
+  {-1, 0, 0, 4, 0, 2, 0},
+  {-1, FALSE},
+  {z80_emitDebuggerSymbol},
   {
-    256,                        /* maxCount */
-    3,                          /* sizeofElement */
-    {6, 7, 8},                  /* sizeofMatchJump[] - Assumes operand allocated to registers */
-    {6, 9, 15},                 /* sizeofRangeCompare[] - Assumes operand allocated to registers*/
-    1,                          /* sizeofSubtract - Assumes use of a singel inc or dec */
-    9,                          /* sizeofDispatch - Assumes operand allocated to register e or c*/
+    256,                         /* maxCount */
+    3,                           /* sizeofElement */
+    {6, 7, 8},                   /* sizeofMatchJump[] - Assumes operand allocated to registers */
+    {6, 9, 15},                  /* sizeofRangeCompare[] - Assumes operand allocated to registers */
+    1,                           /* sizeofSubtract - Assumes use of a singel inc or dec */
+    9,                           /* sizeofDispatch - Assumes operand allocated to register e or c */
   },
   "_",
   _r2k_init,
@@ -1372,24 +1453,24 @@ PORT r3ka_port =
     FALSE,
     NO_MODEL,
     NO_MODEL,
-    NULL,                       /* model == target */
+    NULL,                        /* model == target */
   },
   {                             /* Assembler */
     _r2kAsmCmd,
     NULL,
-    "-plosgffwy",               /* Options with debug */
-    "-plosgffw",                /* Options without debug */
+    "-plosgffwy",                /* Options with debug */
+    "-plosgffw",                 /* Options without debug */
     0,
     ".asm"
   },
   {                             /* Linker */
-    _z80LinkCmd,                //NULL,
-    NULL,                       //LINKCMD,
+    _z80LinkCmd,                 //NULL,
+    NULL,                        //LINKCMD,
     NULL,
     ".rel",
     1,
-    _crt,                       /* crt */
-    _libs_r3ka,                 /* libs */
+    _crt,                        /* crt */
+    _libs_r3ka,                  /* libs */
   },
   {                             /* Peephole optimizer */
     _r2k_defaultRules,
@@ -1405,47 +1486,47 @@ PORT r3ka_port =
     z80canSplitReg,
   },
   /* Sizes: char, short, int, long, long long, near ptr, far ptr, gptr, func ptr, banked func ptr, bit, float */
-  { 1, 2, 2, 4, 8, 2, 2, 2, 2, 2, 1, 4 },
+  {1, 2, 2, 4, 8, 2, 2, 2, 2, 2, 1, 4},
   /* tags for generic pointers */
-  { 0x00, 0x40, 0x60, 0x80 },   /* far, near, xstack, code */
+  {0x00, 0x40, 0x60, 0x80},     /* far, near, xstack, code */
   {
     "XSEG",
     "STACK",
     "CODE",
     "DATA",
-    NULL,                       /* idata */
-    NULL,                       /* pdata */
-    NULL,                       /* xdata */
-    NULL,                       /* bit */
+    NULL,                        /* idata */
+    NULL,                        /* pdata */
+    NULL,                        /* xdata */
+    NULL,                        /* bit */
     "RSEG (ABS)",
     "GSINIT",
-    NULL,                       /* overlay */
+    NULL,                        /* overlay */
     "GSFINAL",
     "HOME",
-    NULL,                       /* xidata */
-    NULL,                       /* xinit */
-    NULL,                       /* const_name */
-    "CABS (ABS)",               /* cabs_name */
-    "DABS (ABS)",               /* xabs_name */
-    NULL,                       /* iabs_name */
-    "INITIALIZED",              /* name of segment for initialized variables */
-    "INITIALIZER",              /* name of segment for copies of initialized variables in code space */
+    NULL,                        /* xidata */
+    NULL,                        /* xinit */
+    NULL,                        /* const_name */
+    "CABS (ABS)",                /* cabs_name */
+    "DABS (ABS)",                /* xabs_name */
+    NULL,                        /* iabs_name */
+    "INITIALIZED",               /* name of segment for initialized variables */
+    "INITIALIZER",               /* name of segment for copies of initialized variables in code space */
     NULL,
     NULL,
-    1,                          /* CODE  is read-only */
-    1                           /* No fancy alignments supported. */
+    1,                           /* CODE  is read-only */
+    1                            /* No fancy alignments supported. */
   },
-  { NULL, NULL },
-  { -1, 0, 0, 4, 0, 2, 0 },
-  { -1, FALSE },
-  { z80_emitDebuggerSymbol },
+  {NULL, NULL},
+  {-1, 0, 0, 4, 0, 2, 0},
+  {-1, FALSE},
+  {z80_emitDebuggerSymbol},
   {
-    256,                        /* maxCount */
-    3,                          /* sizeofElement */
-    {6, 7, 8},                  /* sizeofMatchJump[] - Assumes operand allocated to registers */
-    {6, 9, 15},                 /* sizeofRangeCompare[] - Assumes operand allocated to registers*/
-    1,                          /* sizeofSubtract - Assumes use of a singel inc or dec */
-    9,                          /* sizeofDispatch - Assumes operand allocated to register e or c*/
+    256,                         /* maxCount */
+    3,                           /* sizeofElement */
+    {6, 7, 8},                   /* sizeofMatchJump[] - Assumes operand allocated to registers */
+    {6, 9, 15},                  /* sizeofRangeCompare[] - Assumes operand allocated to registers */
+    1,                           /* sizeofSubtract - Assumes use of a singel inc or dec */
+    9,                           /* sizeofDispatch - Assumes operand allocated to register e or c */
   },
   "_",
   _r3ka_init,
@@ -1501,25 +1582,25 @@ PORT gbz80_port =
     FALSE,
     NO_MODEL,
     NO_MODEL,
-    NULL,                       /* model == target */
+    NULL,                        /* model == target */
   },
   {                             /* Assembler */
     _gbAsmCmd,
     NULL,
-    "-plosgffwy",               /* Options with debug */
-    "-plosgffw",                /* Options without debug */
+    "-plosgffwy",                /* Options with debug */
+    "-plosgffw",                 /* Options without debug */
     0,
     ".asm",
-    NULL                        /* no do_assemble function */
+    NULL                         /* no do_assemble function */
   },
   {                             /* Linker */
-    _gbLinkCmd,                 //NULL,
-    NULL,                       //LINKCMD,
+    _gbLinkCmd,                  //NULL,
+    NULL,                        //LINKCMD,
     NULL,
     ".rel",
     1,
-    _crt,                       /* crt */
-    _libs_gb,                   /* libs */
+    _crt,                        /* crt */
+    _libs_gb,                    /* libs */
   },
   {                             /* Peephole optimizer */
     _gbz80_defaultRules,
@@ -1535,47 +1616,47 @@ PORT gbz80_port =
     z80canSplitReg,
   },
   /* Sizes: char, short, int, long, long long, near ptr, far ptr, gptr, func ptr, banked func ptr, bit, float */
-  { 1, 2, 2, 4, 8, 2, 2, 2, 2, 2, 1, 4 },
+  {1, 2, 2, 4, 8, 2, 2, 2, 2, 2, 1, 4},
   /* tags for generic pointers */
-  { 0x00, 0x40, 0x60, 0x80 },   /* far, near, xstack, code */
+  {0x00, 0x40, 0x60, 0x80},     /* far, near, xstack, code */
   {
     "XSEG",
     "STACK",
     "CODE",
     "DATA",
-    NULL,                       /* idata */
-    NULL,                       /* pdata */
-    NULL,                       /* xdata */
-    NULL,                       /* bit */
+    NULL,                        /* idata */
+    NULL,                        /* pdata */
+    NULL,                        /* xdata */
+    NULL,                        /* bit */
     "RSEG",
     "GSINIT",
-    NULL,                       /* overlay */
+    NULL,                        /* overlay */
     "GSFINAL",
     "HOME",
-    NULL,                       /* xidata */
-    NULL,                       /* xinit */
-    NULL,                       /* const_name */
-    "CABS (ABS)",               /* cabs_name */
-    "DABS (ABS)",               /* xabs_name */
-    NULL,                       /* iabs_name */
-    NULL,                       /* name of segment for initialized variables */
-    NULL,                       /* name of segment for copies of initialized variables in code space */
+    NULL,                        /* xidata */
+    NULL,                        /* xinit */
+    NULL,                        /* const_name */
+    "CABS (ABS)",                /* cabs_name */
+    "DABS (ABS)",                /* xabs_name */
+    NULL,                        /* iabs_name */
+    NULL,                        /* name of segment for initialized variables */
+    NULL,                        /* name of segment for copies of initialized variables in code space */
     NULL,
     NULL,
-    1,                          /* CODE is read-only */
-    1                           /* No fancy alignments supported. */
+    1,                           /* CODE is read-only */
+    1                            /* No fancy alignments supported. */
   },
-  { NULL, NULL },
-  { -1, 0, 0, 2, 0, 4, 0 },
-  { -1, FALSE },
-  { z80_emitDebuggerSymbol },
+  {NULL, NULL},
+  {-1, 0, 0, 2, 0, 4, 0},
+  {-1, FALSE},
+  {z80_emitDebuggerSymbol},
   {
-    256,                        /* maxCount */
-    3,                          /* sizeofElement */
-    {6, 7, 8},                  /* sizeofMatchJump[] - Assumes operand allocated to registers */
-    {6, 9, 15},                 /* sizeofRangeCompare[] - Assumes operand allocated to registers*/
-    1,                          /* sizeofSubtract - Assumes use of a singel inc or dec */
-    9,                          /* sizeofDispatch - Assumes operand allocated to register e or c*/
+    256,                         /* maxCount */
+    3,                           /* sizeofElement */
+    {6, 7, 8},                   /* sizeofMatchJump[] - Assumes operand allocated to registers */
+    {6, 9, 15},                  /* sizeofRangeCompare[] - Assumes operand allocated to registers */
+    1,                           /* sizeofSubtract - Assumes use of a singel inc or dec */
+    9,                           /* sizeofDispatch - Assumes operand allocated to register e or c */
   },
   "_",
   _gbz80_init,
@@ -1630,24 +1711,24 @@ PORT tlcs90_port =
     FALSE,
     NO_MODEL,
     NO_MODEL,
-    NULL,                       /* model == target */
+    NULL,                        /* model == target */
   },
   {                             /* Assembler */
     _tlcs90AsmCmd,
     NULL,
-    "-plosgffwy",               /* Options with debug */
-    "-plosgffw",                /* Options without debug */
+    "-plosgffwy",                /* Options with debug */
+    "-plosgffw",                 /* Options without debug */
     0,
     ".asm"
   },
   {                             /* Linker */
-    _z80LinkCmd,                //NULL,
-    NULL,                       //LINKCMD,
+    _z80LinkCmd,                 //NULL,
+    NULL,                        //LINKCMD,
     NULL,
     ".rel",
     1,
-    _crt,                       /* crt */
-    _libs_tlcs90,               /* libs */
+    _crt,                        /* crt */
+    _libs_tlcs90,                /* libs */
   },
   {                             /* Peephole optimizer */
     _tlcs90_defaultRules,
@@ -1663,47 +1744,47 @@ PORT tlcs90_port =
     z80canSplitReg,
   },
   /* Sizes: char, short, int, long, long long, near ptr, far ptr, gptr, func ptr, banked func ptr, bit, float */
-  { 1, 2, 2, 4, 8, 2, 2, 2, 2, 2, 1, 4 },
+  {1, 2, 2, 4, 8, 2, 2, 2, 2, 2, 1, 4},
   /* tags for generic pointers */
-  { 0x00, 0x40, 0x60, 0x80 },   /* far, near, xstack, code */
+  {0x00, 0x40, 0x60, 0x80},     /* far, near, xstack, code */
   {
     "XSEG",
     "STACK",
     "CODE",
     "DATA",
-    NULL,                       /* idata */
-    NULL,                       /* pdata */
-    NULL,                       /* xdata */
-    NULL,                       /* bit */
+    NULL,                        /* idata */
+    NULL,                        /* pdata */
+    NULL,                        /* xdata */
+    NULL,                        /* bit */
     "RSEG (ABS)",
-    "GSINIT",                   /* static initialization */
-    NULL,                       /* overlay */
+    "GSINIT",                    /* static initialization */
+    NULL,                        /* overlay */
     "GSFINAL",
     "HOME",
-    NULL,                       /* xidata */
-    NULL,                       /* xinit */
-    NULL,                       /* const_name */
-    "CABS (ABS)",               /* cabs_name */
-    "DABS (ABS)",               /* xabs_name */
-    NULL,                       /* iabs_name */
-    "INITIALIZED",              /* name of segment for initialized variables */
-    "INITIALIZER",              /* name of segment for copies of initialized variables in code space */
+    NULL,                        /* xidata */
+    NULL,                        /* xinit */
+    NULL,                        /* const_name */
+    "CABS (ABS)",                /* cabs_name */
+    "DABS (ABS)",                /* xabs_name */
+    NULL,                        /* iabs_name */
+    "INITIALIZED",               /* name of segment for initialized variables */
+    "INITIALIZER",               /* name of segment for copies of initialized variables in code space */
     NULL,
     NULL,
-    1,                          /* CODE  is read-only */
-    1                           /* No fancy alignments supported. */
-   },
-  { NULL, NULL },
-  { -1, 0, 0, 4, 0, 2, 0 },
-  { -1, FALSE },
-  { z80_emitDebuggerSymbol },
+    1,                           /* CODE  is read-only */
+    1                            /* No fancy alignments supported. */
+  },
+  {NULL, NULL},
+  {-1, 0, 0, 4, 0, 2, 0},
+  {-1, FALSE},
+  {z80_emitDebuggerSymbol},
   {
-    256,                        /* maxCount */
-    3,                          /* sizeofElement */
-    {6, 7, 8},                  /* sizeofMatchJump[] - Assumes operand allocated to registers */
-    {6, 9, 15},                 /* sizeofRangeCompare[] - Assumes operand allocated to registers*/
-    1,                          /* sizeofSubtract - Assumes use of a singel inc or dec */
-    9,                          /* sizeofDispatch - Assumes operand allocated to register e or c*/
+    256,                         /* maxCount */
+    3,                           /* sizeofElement */
+    {6, 7, 8},                   /* sizeofMatchJump[] - Assumes operand allocated to registers */
+    {6, 9, 15},                  /* sizeofRangeCompare[] - Assumes operand allocated to registers */
+    1,                           /* sizeofSubtract - Assumes use of a singel inc or dec */
+    9,                           /* sizeofDispatch - Assumes operand allocated to register e or c */
   },
   "_",
   _tlcs90_init,
@@ -1758,24 +1839,24 @@ PORT ez80_z80_port =
     FALSE,
     NO_MODEL,
     NO_MODEL,
-    NULL,                       /* model == target */
+    NULL,                        /* model == target */
   },
   {                             /* Assembler */
     _z80AsmCmd,
     NULL,
-    "-plosgffwy",               /* Options with debug */
-    "-plosgffw",                /* Options without debug */
+    "-plosgffwy",                /* Options with debug */
+    "-plosgffw",                 /* Options without debug */
     0,
     ".asm"
   },
   {                             /* Linker */
-    _z80LinkCmd,                //NULL,
-    NULL,                       //LINKCMD,
+    _z80LinkCmd,                 //NULL,
+    NULL,                        //LINKCMD,
     NULL,
     ".rel",
     1,
-    _crt,                       /* crt */
-    _libs_ez80_z80,             /* libs */
+    _crt,                        /* crt */
+    _libs_ez80_z80,              /* libs */
   },
   {                             /* Peephole optimizer */
     _ez80_z80_defaultRules,
@@ -1791,47 +1872,47 @@ PORT ez80_z80_port =
     z80canSplitReg,
   },
   /* Sizes: char, short, int, long, long long, near ptr, far ptr, gptr, func ptr, banked func ptr, bit, float */
-  { 1, 2, 2, 4, 8, 2, 2, 2, 2, 2, 1, 4 },
+  {1, 2, 2, 4, 8, 2, 2, 2, 2, 2, 1, 4},
   /* tags for generic pointers */
-  { 0x00, 0x40, 0x60, 0x80 },   /* far, near, xstack, code */
+  {0x00, 0x40, 0x60, 0x80},     /* far, near, xstack, code */
   {
     "XSEG",
     "STACK",
     "CODE",
     "DATA",
-    NULL,                       /* idata */
-    NULL,                       /* pdata */
-    NULL,                       /* xdata */
-    NULL,                       /* bit */
+    NULL,                        /* idata */
+    NULL,                        /* pdata */
+    NULL,                        /* xdata */
+    NULL,                        /* bit */
     "RSEG (ABS)",
     "GSINIT",
-    NULL,                       /* overlay */
+    NULL,                        /* overlay */
     "GSFINAL",
     "HOME",
-    NULL,                       /* xidata */
-    NULL,                       /* xinit */
-    NULL,                       /* const_name */
-    "CABS (ABS)",               /* cabs_name */
-    "DABS (ABS)",               /* xabs_name */
-    NULL,                       /* iabs_name */
-    "INITIALIZED",              /* name of segment for initialized variables */
-    "INITIALIZER",              /* name of segment for copies of initialized variables in code space */
+    NULL,                        /* xidata */
+    NULL,                        /* xinit */
+    NULL,                        /* const_name */
+    "CABS (ABS)",                /* cabs_name */
+    "DABS (ABS)",                /* xabs_name */
+    NULL,                        /* iabs_name */
+    "INITIALIZED",               /* name of segment for initialized variables */
+    "INITIALIZER",               /* name of segment for copies of initialized variables in code space */
     NULL,
     NULL,
-    1,                          /* CODE  is read-only */
-    1                           /* No fancy alignments supported. */
+    1,                           /* CODE  is read-only */
+    1                            /* No fancy alignments supported. */
   },
-  { NULL, NULL },
-  { -1, 0, 0, 4, 0, 3, 0 },
-  { -1, FALSE },
-  { z80_emitDebuggerSymbol },
+  {NULL, NULL},
+  {-1, 0, 0, 4, 0, 3, 0},
+  {-1, FALSE},
+  {z80_emitDebuggerSymbol},
   {
-    256,                        /* maxCount */
-    3,                          /* sizeofElement */
-    {6, 7, 8},                  /* sizeofMatchJump[] - Assumes operand allocated to registers */
-    {6, 9, 15},                 /* sizeofRangeCompare[] - Assumes operand allocated to registers*/
-    1,                          /* sizeofSubtract - Assumes use of a singel inc or dec */
-    9,                          /* sizeofDispatch - Assumes operand allocated to register e or c*/
+    256,                         /* maxCount */
+    3,                           /* sizeofElement */
+    {6, 7, 8},                   /* sizeofMatchJump[] - Assumes operand allocated to registers */
+    {6, 9, 15},                  /* sizeofRangeCompare[] - Assumes operand allocated to registers */
+    1,                           /* sizeofSubtract - Assumes use of a singel inc or dec */
+    9,                           /* sizeofDispatch - Assumes operand allocated to register e or c */
   },
   "_",
   _ez80_z80_init,
@@ -1886,24 +1967,24 @@ PORT z80n_port =
     FALSE,
     NO_MODEL,
     NO_MODEL,
-    NULL,                       /* model == target */
+    NULL,                        /* model == target */
   },
   {                             /* Assembler */
     _z80AsmCmd,
     NULL,
-    "-plosgffwy",               /* Options with debug */
-    "-plosgffw",                /* Options without debug */
+    "-plosgffwy",                /* Options with debug */
+    "-plosgffw",                 /* Options without debug */
     0,
     ".asm"
   },
   {                             /* Linker */
-    _z80LinkCmd,                //NULL,
-    NULL,                       //LINKCMD,
+    _z80LinkCmd,                 //NULL,
+    NULL,                        //LINKCMD,
     NULL,
     ".rel",
     1,
-    _crt,                       /* crt */
-    _libs_z80n,                 /* libs */
+    _crt,                        /* crt */
+    _libs_z80n,                  /* libs */
   },
   {                             /* Peephole optimizer */
     _z80n_defaultRules,
@@ -1919,47 +2000,47 @@ PORT z80n_port =
     z80canSplitReg,
   },
   /* Sizes: char, short, int, long, long long, near ptr, far ptr, gptr, func ptr, banked func ptr, bit, float */
-  { 1, 2, 2, 4, 8, 2, 2, 2, 2, 2, 1, 4 },
+  {1, 2, 2, 4, 8, 2, 2, 2, 2, 2, 1, 4},
   /* tags for generic pointers */
-  { 0x00, 0x40, 0x60, 0x80 },   /* far, near, xstack, code */
+  {0x00, 0x40, 0x60, 0x80},     /* far, near, xstack, code */
   {
     "XSEG",
     "STACK",
     "CODE",
     "DATA",
-    NULL,                       /* idata */
-    NULL,                       /* pdata */
-    NULL,                       /* xdata */
-    NULL,                       /* bit */
+    NULL,                        /* idata */
+    NULL,                        /* pdata */
+    NULL,                        /* xdata */
+    NULL,                        /* bit */
     "RSEG (ABS)",
     "GSINIT",
-    NULL,                       /* overlay */
+    NULL,                        /* overlay */
     "GSFINAL",
     "HOME",
-    NULL,                       /* xidata */
-    NULL,                       /* xinit */
-    NULL,                       /* const_name */
-    "CABS (ABS)",               /* cabs_name */
-    "DABS (ABS)",               /* xabs_name */
-    NULL,                       /* iabs_name */
-    "INITIALIZED",              /* name of segment for initialized variables */
-    "INITIALIZER",              /* name of segment for copies of initialized variables in code space */
+    NULL,                        /* xidata */
+    NULL,                        /* xinit */
+    NULL,                        /* const_name */
+    "CABS (ABS)",                /* cabs_name */
+    "DABS (ABS)",                /* xabs_name */
+    NULL,                        /* iabs_name */
+    "INITIALIZED",               /* name of segment for initialized variables */
+    "INITIALIZER",               /* name of segment for copies of initialized variables in code space */
     NULL,
     NULL,
-    1,                          /* CODE  is read-only */
-    1                           /* No fancy alignments supported. */
+    1,                           /* CODE  is read-only */
+    1                            /* No fancy alignments supported. */
   },
-  { NULL, NULL },
-  { -1, 0, 0, 4, 0, 3, 0 },
-  { -1, FALSE },
-  { z80_emitDebuggerSymbol },
+  {NULL, NULL},
+  {-1, 0, 0, 4, 0, 3, 0},
+  {-1, FALSE},
+  {z80_emitDebuggerSymbol},
   {
-    256,                        /* maxCount */
-    3,                          /* sizeofElement */
-    {6, 7, 8},                  /* sizeofMatchJump[] - Assumes operand allocated to registers */
-    {6, 9, 15},                 /* sizeofRangeCompare[] - Assumes operand allocated to registers*/
-    1,                          /* sizeofSubtract - Assumes use of a singel inc or dec */
-    9,                          /* sizeofDispatch - Assumes operand allocated to register e or c*/
+    256,                         /* maxCount */
+    3,                           /* sizeofElement */
+    {6, 7, 8},                   /* sizeofMatchJump[] - Assumes operand allocated to registers */
+    {6, 9, 15},                  /* sizeofRangeCompare[] - Assumes operand allocated to registers */
+    1,                           /* sizeofSubtract - Assumes use of a singel inc or dec */
+    9,                           /* sizeofDispatch - Assumes operand allocated to register e or c */
   },
   "_",
   _z80n_init,
@@ -2002,4 +2083,3 @@ PORT z80n_port =
   9,                            /* Number of registers handled in the tree-decomposition-based register allocator in SDCCralloc.hpp */
   PORT_MAGIC
 };
-
