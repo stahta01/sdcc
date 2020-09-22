@@ -1,18 +1,27 @@
+/** @file m6809/m6809.h
+    Common definitions between the MC6809 and HD6309 ports.
+*/
+#include "common.h"
+#include "ralloc.h"
+#include "gen.h"
+#include "peep.h"
+
+
 typedef enum
   {
-    SUB_HC08,
-    SUB_S08
+    SUB_M6809,
+    SUB_H6309
   }
-HC08_SUB_PORT;
+M6809_SUB_PORT;
 
 typedef struct
   {
-    HC08_SUB_PORT sub;
+    M6809_SUB_PORT sub;
   }
-HC08_OPTS;
+M6809_OPTS;
 
-extern HC08_OPTS hc08_opts;
+extern M6809_OPTS M6809_opts;
 
-#define IS_HC08 (hc08_opts.sub == SUB_HC08)
-#define IS_S08 (hc08_opts.sub == SUB_S08)
+#define IS_M6809 (M6809_opts.sub == SUB_M6809)
+#define IS_H6309 (M6809_opts.sub == SUB_H6309)
 

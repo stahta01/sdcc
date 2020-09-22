@@ -43,7 +43,7 @@
     software-hoarding!
 */
 
-#include "z80.h"
+#include "m6809.h"
 #include "SDCCicode.h"
 #include "dbuf_string.h"
 
@@ -103,18 +103,6 @@ static struct
   int dataExtend;
   int nRegs;
 } _G;
-
-static reg_info _gbz80_regs[] =
-{
-  {REG_GPR, A_IDX, "a", 1},
-  {REG_GPR, C_IDX, "c", 1},
-  {REG_GPR, B_IDX, "b", 1},
-  {REG_GPR, E_IDX, "e", 1},
-  {REG_GPR, D_IDX, "d", 1},
-  {REG_GPR, L_IDX, "l", 1},
-  {REG_GPR, H_IDX, "h", 1},
-  {REG_CND, CND_IDX, "c", 1}
-};
 
 static reg_info _z80_regs[] =
 {

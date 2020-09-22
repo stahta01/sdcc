@@ -45,62 +45,28 @@
 #define OPTION_LEGACY_BANKING  "--legacy-banking"
 #define OPTION_NMOS_Z80        "--nmos-z80"
 
-static char _z80_defaultRules[] =
+static char _m6809_defaultRules[] =
 {
-#include "peeph.rul"
-#include "peeph-z80.rul"
-};
-
-static char _r2k_defaultRules[] =
-{
-#include "peeph.rul"
-#include "peeph-r2k.rul"
-};
-
-static char _tlcs90_defaultRules[] =
-{
-#include "peeph.rul"
-#include "peeph-tlcs90.rul"
-};
-
-static char _gbz80_defaultRules[] =
-{
-#include "peeph-gbz80.rul"
 #include "peeph.rul"
 };
 
-static char _ez80_z80_defaultRules[] =
+M6809_OPTS m6809_opts;
+
+static OPTION _m6809_options[] =
 {
-#include "peeph.rul"
-#include "peeph-z80.rul"
-#include "peeph-ez80_z80.rul"
-};
-
-static char _z80n_defaultRules[] =
-{
-#include "peeph.rul"
-#include "peeph-z80.rul"
-#include "peeph-z80n.rul"
-};
-
-
-Z80_OPTS z80_opts;
-
-static OPTION _z80_options[] =
-{
-  {0, OPTION_CALLEE_SAVES_BC, &z80_opts.calleeSavesBC, "Force a called function to always save BC"},
+  {0, OPTION_CALLEE_SAVES_BC, &m6809_opts.calleeSavesBC, "Force a called function to always save BC"},
   {0, OPTION_PORTMODE, NULL, "Determine PORT I/O mode (z80/z180)"},
   {0, OPTION_ASM, NULL, "Define assembler name (rgbds/asxxxx/isas/z80asm/gas)"},
   {0, OPTION_CODE_SEG, &options.code_seg, "<name> use this name for the code segment", CLAT_STRING},
   {0, OPTION_CONST_SEG, &options.const_seg, "<name> use this name for the const segment", CLAT_STRING},
   {0, OPTION_DATA_SEG, &options.data_seg, "<name> use this name for the data segment", CLAT_STRING},
   {0, OPTION_NO_STD_CRT0, &options.no_std_crt0, "For the z80/gbz80 do not link default crt0.rel"},
-  {0, OPTION_RESERVE_IY, &z80_opts.reserveIY, "Do not use IY (incompatible with --fomit-frame-pointer)"},
+  {0, OPTION_RESERVE_IY, &m6809_opts.reserveIY, "Do not use IY (incompatible with --fomit-frame-pointer)"},
   {0, OPTION_OLDRALLOC, &options.oldralloc, "Use old register allocator"},
-  {0, OPTION_FRAMEPOINTER, &z80_opts.noOmitFramePtr, "Do not omit frame pointer"},
+  {0, OPTION_FRAMEPOINTER, &m6809_opts.noOmitFramePtr, "Do not omit frame pointer"},
   {0, OPTION_EMIT_EXTERNS, NULL, "Emit externs list in generated asm"},
-  {0, OPTION_LEGACY_BANKING, &z80_opts.legacyBanking, "Use legacy method to call banked functions"},
-  {0, OPTION_NMOS_Z80, &z80_opts.nmosZ80, "Generate workaround for NMOS Z80 when saving IFF2"},
+  {0, OPTION_LEGACY_BANKING, &m6809_opts.legacyBanking, "Use legacy method to call banked functions"},
+  {0, OPTION_NMOS_Z80, &m6809_opts.nmosZ80, "Generate workaround for NMOS Z80 when saving IFF2"},
   {0, NULL}
 };
 
@@ -108,12 +74,12 @@ static OPTION _gbz80_options[] =
 {
   {0, OPTION_BO, NULL, "<num> use code bank <num>"},
   {0, OPTION_BA, NULL, "<num> use data bank <num>"},
-  {0, OPTION_CALLEE_SAVES_BC, &z80_opts.calleeSavesBC, "Force a called function to always save BC"},
+  {0, OPTION_CALLEE_SAVES_BC, &m6809_opts.calleeSavesBC, "Force a called function to always save BC"},
   {0, OPTION_CODE_SEG, &options.code_seg, "<name> use this name for the code segment", CLAT_STRING},
   {0, OPTION_CONST_SEG, &options.const_seg, "<name> use this name for the const segment", CLAT_STRING},
   {0, OPTION_DATA_SEG, &options.data_seg, "<name> use this name for the data segment", CLAT_STRING},
   {0, OPTION_NO_STD_CRT0, &options.no_std_crt0, "For the z80/gbz80 do not link default crt0.rel"},
-  {0, OPTION_LEGACY_BANKING, &z80_opts.legacyBanking, "Use legacy method to call banked functions"},
+  {0, OPTION_LEGACY_BANKING, &m6809_opts.legacyBanking, "Use legacy method to call banked functions"},
   {0, NULL}
 };
 
@@ -182,13 +148,13 @@ static char *_keywordstlcs90[] =
   NULL
 };
 
-extern PORT z80_port;
+extern PORT m6809_port;
 extern PORT r2k_port;
 extern PORT gbz80_port;
 
 #include "mappings.i"
 
-static builtins _z80_builtins[] =
+static builtins _m6809_builtins[] =
 {
   {"__builtin_memcpy", "vg*", 3, {"vg*", "Cvg*", "Ui"}},
   {"__builtin_strcpy", "cg*", 2, {"cg*", "Ccg*"}},
@@ -199,9 +165,9 @@ static builtins _z80_builtins[] =
 };
 
 static void
-_z80_init (void)
+_m6809_init (void)
 {
-  z80_opts.sub = SUB_Z80;
+  m6809_opts.sub = SUB_Z80;
   switch (_G.asmType)
     {
     case ASM_TYPE_GAS:
@@ -216,7 +182,7 @@ _z80_init (void)
 static void
 _z180_init (void)
 {
-  z80_opts.sub = SUB_Z180;
+  m6809_opts.sub = SUB_Z180;
   switch (_G.asmType)
     {
     case ASM_TYPE_GAS:
@@ -231,34 +197,34 @@ _z180_init (void)
 static void
 _r2k_init (void)
 {
-  z80_opts.sub = SUB_R2K;
+  m6809_opts.sub = SUB_R2K;
   asm_addTree (&_asxxxx_r2k);
 }
 
 static void
 _r3ka_init (void)
 {
-  z80_opts.sub = SUB_R3KA;
+  m6809_opts.sub = SUB_R3KA;
   asm_addTree (&_asxxxx_r2k);
 }
 
 static void
 _gbz80_init (void)
 {
-  z80_opts.sub = SUB_GBZ80;
+  m6809_opts.sub = SUB_GBZ80;
 }
 
 static void
 _tlcs90_init (void)
 {
-  z80_opts.sub = SUB_TLCS90;
+  m6809_opts.sub = SUB_TLCS90;
   asm_addTree (&_asxxxx_z80);
 }
 
 static void
 _ez80_z80_init (void)
 {
-  z80_opts.sub = SUB_EZ80_Z80;
+  m6809_opts.sub = SUB_EZ80_Z80;
   switch (_G.asmType)
     {
     case ASM_TYPE_GAS:
@@ -273,7 +239,7 @@ _ez80_z80_init (void)
 static void
 _z80n_init (void)
 {
-  z80_opts.sub = SUB_Z80N;
+  m6809_opts.sub = SUB_Z80N;
   asm_addTree (&_asxxxx_z80);
 }
 
@@ -410,19 +376,19 @@ do_pragma (int id, const char *name, const char *cp)
 
       if (!strcmp (str, "z80"))
         {
-          z80_opts.port_mode = 80;
+          m6809_opts.port_mode = 80;
         }
       else if (!strcmp (str, "z180"))
         {
-          z80_opts.port_mode = 180;
+          m6809_opts.port_mode = 180;
         }
       else if (!strcmp (str, "save"))
         {
-          z80_opts.port_back = z80_opts.port_mode;
+          m6809_opts.port_back = m6809_opts.port_mode;
         }
       else if (!strcmp (str, "restore"))
         {
-          z80_opts.port_mode = z80_opts.port_back;
+          m6809_opts.port_mode = m6809_opts.port_back;
         }
       else
         {
@@ -673,12 +639,12 @@ _parseOptions (int *pargc, char **argv, int *i)
 
           if (!strcmp (portmode, "z80"))
             {
-              z80_opts.port_mode = 80;
+              m6809_opts.port_mode = 80;
               return TRUE;
             }
           else if (!strcmp (portmode, "z180"))
             {
-              z80_opts.port_mode = 180;
+              m6809_opts.port_mode = 180;
               return TRUE;
             }
         }
@@ -1058,7 +1024,7 @@ static const char *const _libs_ez80_z80[] = { "ez80_z80", NULL, };
 static const char *const _libs_z80n[] = { "z80n", NULL, };
 
 /* Globals */
-PORT z80_port =
+PORT m6809_port =
 {
   TARGET_ID_Z80,
   "z80",
@@ -1089,7 +1055,7 @@ PORT z80_port =
     _libs_z80,                   /* libs */
   },
   {                             /* Peephole optimizer */
-    _z80_defaultRules,
+    _m6809_defaultRules,
     z80instructionSize,
     0,
     0,
@@ -1135,7 +1101,7 @@ PORT z80_port =
   {NULL, NULL},
   {-1, 0, 0, 4, 0, 3, 0},
   {-1, FALSE},
-  {z80_emitDebuggerSymbol},
+  {m6809_emitDebuggerSymbol},
   {
     256,                         /* maxCount */
     3,                           /* sizeofElement */
@@ -1145,13 +1111,13 @@ PORT z80_port =
     9,                           /* sizeofDispatch - Assumes operand allocated to register e or c */
   },
   "_",
-  _z80_init,
+  _m6809_init,
   _parseOptions,
-  _z80_options,
+  _m6809_options,
   NULL,
   _finaliseOptions,
   _setDefaultOptions,
-  z80_assignRegisters,
+  m6809_assignRegisters,
   _getRegName,
   _getRegByName,
   NULL,
@@ -1178,7 +1144,7 @@ PORT z80_port =
   0,                            /* leave == */
   FALSE,                        /* Array initializer support. */
   0,                            /* no CSE cost estimation yet */
-  _z80_builtins,                /* builtin functions */
+  _m6809_builtins,                /* builtin functions */
   GPOINTER,                     /* treat unqualified pointers as "generic" pointers */
   1,                            /* reset labelKey to 1 */
   1,                            /* globals & local statics allowed */
@@ -1217,7 +1183,7 @@ PORT z180_port =
     _libs_z180,                  /* libs */
   },
   {                             /* Peephole optimizer */
-    _z80_defaultRules,
+    _m6809_defaultRules,
     z80instructionSize,
     NULL,
     NULL,
@@ -1263,7 +1229,7 @@ PORT z180_port =
   {NULL, NULL},
   {-1, 0, 0, 4, 0, 3, 0},
   {-1, FALSE},
-  {z80_emitDebuggerSymbol},
+  {m6809_emitDebuggerSymbol},
   {
     256,                         /* maxCount */
     3,                           /* sizeofElement */
@@ -1275,11 +1241,11 @@ PORT z180_port =
   "_",
   _z180_init,
   _parseOptions,
-  _z80_options,
+  _m6809_options,
   NULL,
   _finaliseOptions,
   _setDefaultOptions,
-  z80_assignRegisters,
+  m6809_assignRegisters,
   _getRegName,
   _getRegByName,
   NULL,
@@ -1306,7 +1272,7 @@ PORT z180_port =
   0,                            /* leave == */
   FALSE,                        /* Array initializer support. */
   0,                            /* no CSE cost estimation yet */
-  _z80_builtins,                /* builtin functions */
+  _m6809_builtins,                /* builtin functions */
   GPOINTER,                     /* treat unqualified pointers as "generic" pointers */
   1,                            /* reset labelKey to 1 */
   1,                            /* globals & local statics allowed */
@@ -1391,7 +1357,7 @@ PORT r2k_port =
   {NULL, NULL},
   {-1, 0, 0, 4, 0, 2, 0},
   {-1, FALSE},
-  {z80_emitDebuggerSymbol},
+  {m6809_emitDebuggerSymbol},
   {
     256,                         /* maxCount */
     3,                           /* sizeofElement */
@@ -1403,11 +1369,11 @@ PORT r2k_port =
   "_",
   _r2k_init,
   _parseOptions,
-  _z80_options,
+  _m6809_options,
   NULL,
   _finaliseOptions,
   _setDefaultOptions,
-  z80_assignRegisters,
+  m6809_assignRegisters,
   _getRegName,
   _getRegByName,
   NULL,
@@ -1434,7 +1400,7 @@ PORT r2k_port =
   0,                            /* leave == */
   FALSE,                        /* Array initializer support. */
   0,                            /* no CSE cost estimation yet */
-  _z80_builtins,                /* builtin functions */
+  _m6809_builtins,                /* builtin functions */
   GPOINTER,                     /* treat unqualified pointers as "generic" pointers */
   1,                            /* reset labelKey to 1 */
   1,                            /* globals & local statics allowed */
@@ -1519,7 +1485,7 @@ PORT r3ka_port =
   {NULL, NULL},
   {-1, 0, 0, 4, 0, 2, 0},
   {-1, FALSE},
-  {z80_emitDebuggerSymbol},
+  {m6809_emitDebuggerSymbol},
   {
     256,                         /* maxCount */
     3,                           /* sizeofElement */
@@ -1531,11 +1497,11 @@ PORT r3ka_port =
   "_",
   _r3ka_init,
   _parseOptions,
-  _z80_options,
+  _m6809_options,
   NULL,
   _finaliseOptions,
   _setDefaultOptions,
-  z80_assignRegisters,
+  m6809_assignRegisters,
   _getRegName,
   _getRegByName,
   NULL,
@@ -1562,7 +1528,7 @@ PORT r3ka_port =
   0,                            /* leave == */
   FALSE,                        /* Array initializer support. */
   0,                            /* no CSE cost estimation yet */
-  _z80_builtins,                /* builtin functions */
+  _m6809_builtins,                /* builtin functions */
   GPOINTER,                     /* treat unqualified pointers as "generic" pointers */
   1,                            /* reset labelKey to 1 */
   1,                            /* globals & local statics allowed */
@@ -1649,7 +1615,7 @@ PORT gbz80_port =
   {NULL, NULL},
   {-1, 0, 0, 2, 0, 4, 0},
   {-1, FALSE},
-  {z80_emitDebuggerSymbol},
+  {m6809_emitDebuggerSymbol},
   {
     256,                         /* maxCount */
     3,                           /* sizeofElement */
@@ -1665,7 +1631,7 @@ PORT gbz80_port =
   NULL,
   _finaliseOptions,
   _setDefaultOptions,
-  z80_assignRegisters,
+  m6809_assignRegisters,
   _getRegName,
   _getRegByName,
   NULL,
@@ -1777,7 +1743,7 @@ PORT tlcs90_port =
   {NULL, NULL},
   {-1, 0, 0, 4, 0, 2, 0},
   {-1, FALSE},
-  {z80_emitDebuggerSymbol},
+  {m6809_emitDebuggerSymbol},
   {
     256,                         /* maxCount */
     3,                           /* sizeofElement */
@@ -1789,11 +1755,11 @@ PORT tlcs90_port =
   "_",
   _tlcs90_init,
   _parseOptions,
-  _z80_options,
+  _m6809_options,
   NULL,
   _finaliseOptions,
   _setDefaultOptions,
-  z80_assignRegisters,
+  m6809_assignRegisters,
   _getRegName,
   _getRegByName,
   NULL,
@@ -1905,7 +1871,7 @@ PORT ez80_z80_port =
   {NULL, NULL},
   {-1, 0, 0, 4, 0, 3, 0},
   {-1, FALSE},
-  {z80_emitDebuggerSymbol},
+  {m6809_emitDebuggerSymbol},
   {
     256,                         /* maxCount */
     3,                           /* sizeofElement */
@@ -1917,11 +1883,11 @@ PORT ez80_z80_port =
   "_",
   _ez80_z80_init,
   _parseOptions,
-  _z80_options,
+  _m6809_options,
   NULL,
   _finaliseOptions,
   _setDefaultOptions,
-  z80_assignRegisters,
+  m6809_assignRegisters,
   _getRegName,
   _getRegByName,
   NULL,
@@ -1948,7 +1914,7 @@ PORT ez80_z80_port =
   0,                            /* leave == */
   FALSE,                        /* Array initializer support. */
   0,                            /* no CSE cost estimation yet */
-  _z80_builtins,                /* builtin functions */
+  _m6809_builtins,                /* builtin functions */
   GPOINTER,                     /* treat unqualified pointers as "generic" pointers */
   1,                            /* reset labelKey to 1 */
   1,                            /* globals & local statics allowed */
@@ -2033,7 +1999,7 @@ PORT z80n_port =
   {NULL, NULL},
   {-1, 0, 0, 4, 0, 3, 0},
   {-1, FALSE},
-  {z80_emitDebuggerSymbol},
+  {m6809_emitDebuggerSymbol},
   {
     256,                         /* maxCount */
     3,                           /* sizeofElement */
@@ -2045,11 +2011,11 @@ PORT z80n_port =
   "_",
   _z80n_init,
   _parseOptions,
-  _z80_options,
+  _m6809_options,
   NULL,
   _finaliseOptions,
   _setDefaultOptions,
-  z80_assignRegisters,
+  m6809_assignRegisters,
   _getRegName,
   _getRegByName,
   NULL,
@@ -2076,7 +2042,7 @@ PORT z80n_port =
   0,                            /* leave == */
   FALSE,                        /* Array initializer support. */
   0,                            /* no CSE cost estimation yet */
-  _z80_builtins,                /* builtin functions */
+  _m6809_builtins,                /* builtin functions */
   GPOINTER,                     /* treat unqualified pointers as "generic" pointers */
   1,                            /* reset labelKey to 1 */
   1,                            /* globals & local statics allowed */

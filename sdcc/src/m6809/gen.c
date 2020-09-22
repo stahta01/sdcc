@@ -26,7 +26,7 @@
 #include <string.h>
 #include <ctype.h>
 
-#include "z80.h"
+#include "m6809.h"
 #include "gen.h"
 #include "dbuf_string.h"
 
@@ -78,38 +78,6 @@ typedef enum
   PAIR_IX,
   NUM_PAIRS
 } PAIR_ID;
-
-static struct
-{
-  const char *name;
-  const char *l;
-  const char *h;
-  int l_idx;
-  int h_idx;
-} _pairs[NUM_PAIRS] =
-{
-  {
-    "??1", "?2", "?3", -1, -1
-  },
-  {
-    "af", "f", "a", -1, A_IDX
-  },
-  {
-    "bc", "c", "b", C_IDX, B_IDX
-  },
-  {
-    "de", "e", "d", E_IDX, D_IDX
-  },
-  {
-    "hl", "l", "h", L_IDX, H_IDX
-  },
-  {
-    "iy", "iyl", "iyh", IYL_IDX, IYH_IDX
-  },
-  {
-    "ix", "ixl", "ixh", -1, -1
-  }
-};
 
 enum
 {
@@ -236,9 +204,9 @@ static struct
   } trace;
 } _G;
 
-bool z80_regs_used_as_parms_in_calls_from_current_function[IYH_IDX + 1];
-bool z80_symmParm_in_calls_from_current_function;
-bool z80_regs_preserved_in_calls_from_current_function[IYH_IDX + 1];
+bool m6809_regs_used_as_parms_in_calls_from_current_function[IYH_IDX + 1];
+bool m6809_symmParm_in_calls_from_current_function;
+bool m6809_regs_preserved_in_calls_from_current_function[IYH_IDX + 1];
 
 static const char *aopGet (asmop * aop, int offset, bool bit16);
 
@@ -261,58 +229,58 @@ static struct asmop *const ASMOP_RETURN = &asmop_return;
 static asmop *asmopregs[] = { &asmop_a, &asmop_c, &asmop_b, &asmop_e, &asmop_d, &asmop_l, &asmop_h, &asmop_iyl, &asmop_iyh };
 
 void
-z80_init_asmops (void)
+m6809_init_asmops (void)
 {
   asmop_a.type = AOP_REG;
   asmop_a.size = 1;
-  asmop_a.aopu.aop_reg[0] = regsZ80 + A_IDX;
+  asmop_a.aopu.aop_reg[0] = regsM6809 + A_IDX;
   memset (asmop_a.regs, -1, 9);
   asmop_a.regs[A_IDX] = 0;
   asmop_b.type = AOP_REG;
   asmop_b.size = 1;
-  asmop_b.aopu.aop_reg[0] = regsZ80 + B_IDX;
+  asmop_b.aopu.aop_reg[0] = regsM6809 + B_IDX;
   memset (asmop_b.regs, -1, 9);
   asmop_b.regs[B_IDX] = 0;
   asmop_c.type = AOP_REG;
   asmop_c.size = 1;
-  asmop_c.aopu.aop_reg[0] = regsZ80 + C_IDX;
+  asmop_c.aopu.aop_reg[0] = regsM6809 + C_IDX;
   memset (asmop_c.regs, -1, 9);
   asmop_c.regs[C_IDX] = 0;
   asmop_d.type = AOP_REG;
   asmop_d.size = 1;
-  asmop_d.aopu.aop_reg[0] = regsZ80 + D_IDX;
+  asmop_d.aopu.aop_reg[0] = regsM6809 + D_IDX;
   memset (asmop_d.regs, -1, 9);
   asmop_d.regs[D_IDX] = 0;
   asmop_e.type = AOP_REG;
   asmop_e.size = 1;
-  asmop_e.aopu.aop_reg[0] = regsZ80 + E_IDX;
+  asmop_e.aopu.aop_reg[0] = regsM6809 + E_IDX;
   memset (asmop_e.regs, -1, 9);
   asmop_e.regs[E_IDX] = 0;
   asmop_h.type = AOP_REG;
   asmop_h.size = 1;
-  asmop_h.aopu.aop_reg[0] = regsZ80 + H_IDX;
+  asmop_h.aopu.aop_reg[0] = regsM6809 + H_IDX;
   memset (asmop_h.regs, -1, 9);
   asmop_h.regs[H_IDX] = 0;
   asmop_l.type = AOP_REG;
   asmop_l.size = 1;
-  asmop_l.aopu.aop_reg[0] = regsZ80 + L_IDX;
+  asmop_l.aopu.aop_reg[0] = regsM6809 + L_IDX;
   memset (asmop_l.regs, -1, 9);
   asmop_l.regs[L_IDX] = 0;
   asmop_iyh.type = AOP_REG;
   asmop_iyh.size = 1;
-  asmop_iyh.aopu.aop_reg[0] = regsZ80 + IYH_IDX;
+  asmop_iyh.aopu.aop_reg[0] = regsM6809 + IYH_IDX;
   memset (asmop_iyh.regs, -1, 9);
   asmop_iyh.regs[IYH_IDX] = 0;
   asmop_iyl.type = AOP_REG;
   asmop_iyl.size = 1;
-  asmop_iyl.aopu.aop_reg[0] = regsZ80 + IYL_IDX;
+  asmop_iyl.aopu.aop_reg[0] = regsM6809 + IYL_IDX;
   memset (asmop_iyl.regs, -1, 9);
   asmop_iyl.regs[IYL_IDX] = 0;
 
   asmop_hl.type = AOP_REG;
   asmop_hl.size = 2;
-  asmop_hl.aopu.aop_reg[0] = regsZ80 + L_IDX;
-  asmop_hl.aopu.aop_reg[1] = regsZ80 + H_IDX;
+  asmop_hl.aopu.aop_reg[0] = regsM6809 + L_IDX;
+  asmop_hl.aopu.aop_reg[1] = regsM6809 + H_IDX;
   memset (asmop_hl.regs, -1, 9);
   asmop_hl.regs[L_IDX] = 0;
   asmop_hl.regs[H_IDX] = 1;
@@ -332,24 +300,24 @@ z80_init_asmops (void)
   memset (asmop_return.regs, -1, 9);
   if (IS_GB)
     {
-      asmop_return.aopu.aop_reg[0] = regsZ80 + E_IDX;
+      asmop_return.aopu.aop_reg[0] = regsM6809 + E_IDX;
       asmop_return.regs[E_IDX] = 0;
-      asmop_return.aopu.aop_reg[1] = regsZ80 + D_IDX;
+      asmop_return.aopu.aop_reg[1] = regsM6809 + D_IDX;
       asmop_return.regs[D_IDX] = 1;
-      asmop_return.aopu.aop_reg[2] = regsZ80 + L_IDX;
+      asmop_return.aopu.aop_reg[2] = regsM6809 + L_IDX;
       asmop_return.regs[L_IDX] = 2;
-      asmop_return.aopu.aop_reg[3] = regsZ80 + H_IDX;
+      asmop_return.aopu.aop_reg[3] = regsM6809 + H_IDX;
       asmop_return.regs[H_IDX] = 2;
     }
   else
     {
-      asmop_return.aopu.aop_reg[0] = regsZ80 + L_IDX;
+      asmop_return.aopu.aop_reg[0] = regsM6809 + L_IDX;
       asmop_return.regs[L_IDX] = 0;
-      asmop_return.aopu.aop_reg[1] = regsZ80 + H_IDX;
+      asmop_return.aopu.aop_reg[1] = regsM6809 + H_IDX;
       asmop_return.regs[H_IDX] = 1;
-      asmop_return.aopu.aop_reg[2] = regsZ80 + E_IDX;
+      asmop_return.aopu.aop_reg[2] = regsM6809 + E_IDX;
       asmop_return.regs[E_IDX] = 2;
-      asmop_return.aopu.aop_reg[3] = regsZ80 + D_IDX;
+      asmop_return.aopu.aop_reg[3] = regsM6809 + D_IDX;
       asmop_return.regs[D_IDX] = 3;
     }
 }
@@ -537,7 +505,7 @@ isPairDead (PAIR_ID id, const iCode * ic)
 {
   const bitVect *r = (!options.oldralloc ? ic->rSurv :
                       (POINTER_SET (ic) ? ic->rMask :
-                       (bitVectCplAnd (bitVectCopy (ic->rMask), z80_rUmaskForOp (IC_RESULT (ic))))));
+                       (bitVectCplAnd (bitVectCopy (ic->rMask), m6809_rUmaskForOp (IC_RESULT (ic))))));
 
   if (id == PAIR_DE)
     {
@@ -759,11 +727,11 @@ getPairId (const asmop * aop)
 
 
 /*-----------------------------------------------------------------*/
-/* z80_emitDebuggerSymbol - associate the current code location    */
+/* m6809_emitDebuggerSymbol - associate the current code location    */
 /*   with a debugger symbol                                        */
 /*-----------------------------------------------------------------*/
 void
-z80_emitDebuggerSymbol (const char *debugSym)
+m6809_emitDebuggerSymbol (const char *debugSym)
 {
   genLine.lineElement.isDebug = 1;
   emit2 ("%s !equ .", debugSym);
@@ -1724,15 +1692,15 @@ aopOp (operand * op, const iCode * ic, bool result, bool requires_a)
               sym->aop = op->aop = aop = newAsmop (AOP_REG);
               aop->size = getSize (sym->type);
               wassertl (aop->size == 1, "Internal error: Caching in A, but too big to fit in A");
-              aop->aopu.aop_reg[0] = regsZ80 + A_IDX;
+              aop->aopu.aop_reg[0] = regsM6809 + A_IDX;
             }
           else if (sym->accuse == ACCUSE_IY)    /* For compability with old register allocator only */
             {
               sym->aop = op->aop = aop = newAsmop (AOP_REG);
               aop->size = getSize (sym->type);
               wassertl (aop->size <= 2, "Internal error: Caching in IY, but too big to fit in IY");
-              aop->aopu.aop_reg[0] = regsZ80 + IYL_IDX;
-              aop->aopu.aop_reg[0] = regsZ80 + IYH_IDX;
+              aop->aopu.aop_reg[0] = regsM6809 + IYL_IDX;
+              aop->aopu.aop_reg[0] = regsM6809 + IYH_IDX;
             }
           else
             {
@@ -2788,7 +2756,7 @@ aopGet (asmop * aop, int offset, bool bit16)
                   emit2 ("ld a, !msbimmeds", aop->aopu.aop_dir);
                   emit2 ("in a, (!lsbimmeds)", aop->aopu.aop_dir);
                 }
-              else if (z80_opts.port_mode == 180)
+              else if (m6809_opts.port_mode == 180)
                 {
                   /* z180 in0/out0 mode */
                   emit2 ("in0 a, (%s)", aop->aopu.aop_dir);
@@ -3049,7 +3017,7 @@ aopPut (asmop * aop, const char *s, int offset)
                   spillPair (PAIR_BC);
                 }
             }
-          else if (z80_opts.port_mode == 180)
+          else if (m6809_opts.port_mode == 180)
             {
               /* z180 in0/out0 mode */
               emit2 ("ld a, %s", s);
@@ -4626,7 +4594,7 @@ restoreRegs (bool iy, bool de, bool bc, bool hl, const operand * result)
 
   if (SomethingReturned)
     {
-      bitVect *rv = z80_rUmaskForOp (result);
+      bitVect *rv = m6809_rUmaskForOp (result);
       bInRet = bitVectBitValue (rv, B_IDX);
       cInRet = bitVectBitValue (rv, C_IDX);
       dInRet = bitVectBitValue (rv, D_IDX);
@@ -4773,7 +4741,7 @@ _saveRegsForCall (const iCode * ic, bool dontsaveIY)
           bool bcInRet = FALSE, deInRet = FALSE;
           bitVect *rInUse;
 
-          rInUse = bitVectCplAnd (bitVectCopy (ic->rMask), z80_rUmaskForOp (IC_RESULT (ic)));
+          rInUse = bitVectCplAnd (bitVectCopy (ic->rMask), m6809_rUmaskForOp (IC_RESULT (ic)));
 
           deInUse = bitVectBitValue (rInUse, D_IDX) || bitVectBitValue (rInUse, E_IDX);
           bcInUse = bitVectBitValue (rInUse, B_IDX) || bitVectBitValue (rInUse, C_IDX);
@@ -5231,8 +5199,8 @@ genSend (const iCode * ic)
   if (size == 2)
     {
       fetchPairLong (PAIR_HL, AOP (IC_LEFT (ic)), ic, 0);
-      z80_regs_used_as_parms_in_calls_from_current_function[L_IDX] = true;
-      z80_regs_used_as_parms_in_calls_from_current_function[H_IDX] = true;
+      m6809_regs_used_as_parms_in_calls_from_current_function[L_IDX] = true;
+      m6809_regs_used_as_parms_in_calls_from_current_function[H_IDX] = true;
     }
   else if (size <= 4)
     {
@@ -5245,18 +5213,18 @@ genSend (const iCode * ic)
               wassertl (regalloc_dry_run, "Register parameter overwrites value that is still needed");
             }
           fetchPairLong (PAIR_DE, AOP (IC_LEFT (ic)), ic, 2);
-          z80_regs_used_as_parms_in_calls_from_current_function[E_IDX] = true;
-          z80_regs_used_as_parms_in_calls_from_current_function[D_IDX] = true;
+          m6809_regs_used_as_parms_in_calls_from_current_function[E_IDX] = true;
+          m6809_regs_used_as_parms_in_calls_from_current_function[D_IDX] = true;
           fetchPairLong (PAIR_HL, AOP (IC_LEFT (ic)), ic, 0);
-          z80_regs_used_as_parms_in_calls_from_current_function[L_IDX] = true;
-          z80_regs_used_as_parms_in_calls_from_current_function[H_IDX] = true;
+          m6809_regs_used_as_parms_in_calls_from_current_function[L_IDX] = true;
+          m6809_regs_used_as_parms_in_calls_from_current_function[H_IDX] = true;
         }
       else
         {
           for (int i = 0; i < AOP_SIZE (IC_LEFT (ic)); i++)
             if (!regalloc_dry_run)
               {
-                z80_regs_used_as_parms_in_calls_from_current_function[ASMOP_RETURN->aopu.aop_reg[i]->rIdx] = true;
+                m6809_regs_used_as_parms_in_calls_from_current_function[ASMOP_RETURN->aopu.aop_reg[i]->rIdx] = true;
               }
 
           genMove_o (ASMOP_RETURN, 0, IC_LEFT (ic)->aop, 0, IC_LEFT (ic)->aop->size, true, true);
@@ -5282,7 +5250,7 @@ genCall (const iCode * ic)
 
   for (i = 0; i < IYH_IDX + 1; i++)
     {
-      z80_regs_preserved_in_calls_from_current_function[i] |= ftype->funcAttrs.preserved_regs[i];
+      m6809_regs_preserved_in_calls_from_current_function[i] |= ftype->funcAttrs.preserved_regs[i];
     }
 
   _saveRegsForCall (ic, FALSE);
@@ -5473,7 +5441,7 @@ genCall (const iCode * ic)
              legacy - only if --legacy-banking is specified
              a:bc - only for __z88dk_fastcall __banked functions
              e:hl - default (may have optimal bank switch routine) */
-          if (z80_opts.legacyBanking)
+          if (m6809_opts.legacyBanking)
             {
               emit2 ("call ___sdcc_bcall");
               emit2 ("!dws", name);
@@ -5545,7 +5513,7 @@ genCall (const iCode * ic)
       if (!regalloc_dry_run)
         {
           _G.stack.pushed -= (ic->parmBytes + bigreturn * 2);
-          z80_symmParm_in_calls_from_current_function = FALSE;
+          m6809_symmParm_in_calls_from_current_function = FALSE;
         }
     }
   else if ((ic->parmBytes || bigreturn))
@@ -5628,7 +5596,7 @@ genFunction (const iCode * ic)
   /* Create the function header */
   emit2 ("!functionheader", sym->name);
 
-  emitDebug (z80_assignment_optimal ? "; Register assignment is optimal." : "; Register assignment might be sub-optimal.");
+  emitDebug (m6809_assignment_optimal ? "; Register assignment is optimal." : "; Register assignment might be sub-optimal.");
   emitDebug ("; Stack space usage: %d bytes.", sym->stack);
 
   if (IFFUNC_BANKED (sym->type))
@@ -5690,7 +5658,7 @@ genFunction (const iCode * ic)
             }
           else
             {
-              if (z80_opts.nmosZ80)
+              if (m6809_opts.nmosZ80)
                 {
                   emit2 ("call ___sdcc_critical_enter");
                 }
@@ -5713,7 +5681,7 @@ genFunction (const iCode * ic)
       emit2 ("!profileenter");
     }
 
-  if (z80_opts.calleeSavesBC)
+  if (m6809_opts.calleeSavesBC)
     {
       bcInUse = TRUE;
     }
@@ -5783,7 +5751,7 @@ genFunction (const iCode * ic)
 
   _G.omitFramePtr = options.oldralloc ? (!IS_GB && options.omitFramePtr) : should_omit_frame_ptr;
 
-  if (!IS_GB && !z80_opts.noOmitFramePtr && !stackParm && !sym->stack)
+  if (!IS_GB && !m6809_opts.noOmitFramePtr && !stackParm && !sym->stack)
     {
       if (!regalloc_dry_run)
         {
@@ -10947,12 +10915,12 @@ genLeftShift (const iCode * ic)
     }
   if (shift_by_lit && shiftcount > 1)
     {
-      emit2 ("ld %s, !immedbyte", countreg == A_IDX ? "a" : regsZ80[countreg].name, shiftcount);
+      emit2 ("ld %s, !immedbyte", countreg == A_IDX ? "a" : regsM6809[countreg].name, shiftcount);
       regalloc_dry_run_cost += 2;
     }
   else if (!shift_by_lit)
     {
-      emit2 ("inc %s", countreg == A_IDX ? "a" : regsZ80[countreg].name);
+      emit2 ("inc %s", countreg == A_IDX ? "a" : regsM6809[countreg].name);
       regalloc_dry_run_cost += 1;
       if (!regalloc_dry_run)
         {
@@ -11029,7 +10997,7 @@ genLeftShift (const iCode * ic)
         }
       else
         {
-          emit2 ("dec %s", countreg == A_IDX ? "a" : regsZ80[countreg].name);
+          emit2 ("dec %s", countreg == A_IDX ? "a" : regsM6809[countreg].name);
           if (!regalloc_dry_run)
             {
               emit2 ("jr NZ,!tlabel", labelKey2num (tlbl->key));
@@ -11390,12 +11358,12 @@ genRightShift (const iCode * ic)
     }
   else if (shift_by_lit && shiftcount > 1)
     {
-      emit2 ("ld %s, !immedbyte", countreg == A_IDX ? "a" : regsZ80[countreg].name, shiftcount);
+      emit2 ("ld %s, !immedbyte", countreg == A_IDX ? "a" : regsM6809[countreg].name, shiftcount);
       regalloc_dry_run_cost += 2;
     }
   else if (!shift_by_lit)
     {
-      emit2 ("inc %s", countreg == A_IDX ? "a" : regsZ80[countreg].name);
+      emit2 ("inc %s", countreg == A_IDX ? "a" : regsM6809[countreg].name);
       regalloc_dry_run_cost += 1;
       if (!regalloc_dry_run)
         {
@@ -11460,7 +11428,7 @@ genRightShift (const iCode * ic)
         }
       else
         {
-          emit2 ("dec %s", countreg == A_IDX ? "a" : regsZ80[countreg].name);
+          emit2 ("dec %s", countreg == A_IDX ? "a" : regsM6809[countreg].name);
           if (!regalloc_dry_run)
             {
               emit2 ("jr NZ, !tlabel", labelKey2num (tlbl->key));
@@ -13610,7 +13578,7 @@ genCritical (const iCode * ic)
       cheapMove (IC_RESULT (ic)->aop, 0, ASMOP_ZERO, 0, true);
       if (!regalloc_dry_run)
         {
-          if (z80_opts.nmosZ80)
+          if (m6809_opts.nmosZ80)
             {
               emit2 ("call ___sdcc_critical_enter");
             }
@@ -13635,7 +13603,7 @@ genCritical (const iCode * ic)
     }
   else
     {
-      if (z80_opts.nmosZ80)
+      if (m6809_opts.nmosZ80)
         {
           emit2 ("call ___sdcc_critical_enter");
         }
@@ -15155,9 +15123,9 @@ genZ80Code (iCode * lic)
 
   initGenLineElement ();
 
-  memset (z80_regs_used_as_parms_in_calls_from_current_function, 0, sizeof (bool) * (IYH_IDX + 1));
-  z80_symmParm_in_calls_from_current_function = TRUE;
-  memset (z80_regs_preserved_in_calls_from_current_function, 0, sizeof (bool) * (IYH_IDX + 1));
+  memset (m6809_regs_used_as_parms_in_calls_from_current_function, 0, sizeof (bool) * (IYH_IDX + 1));
+  m6809_symmParm_in_calls_from_current_function = TRUE;
+  memset (m6809_regs_preserved_in_calls_from_current_function, 0, sizeof (bool) * (IYH_IDX + 1));
 
   /* if debug information required */
   if (options.debug && currFunc)
