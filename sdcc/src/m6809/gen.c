@@ -1,5 +1,5 @@
 /*-------------------------------------------------------------------------
-  gen.c - code generator for Z80 / Z180 / GBZ80.
+  gen.c - code generator for MC6809.
 
   Copyright (C) 1998, Sandeep Dutta . sandeep.dutta@usa.net
   Copyright (C) 1999, Jean-Louis VERN.jlvern@writeme.com
@@ -64,20 +64,6 @@ enum
   INT8MIN = -128,
   INT8MAX = 127
 };
-
-/** Enum covering all the possible register pairs.
- */
-typedef enum
-{
-  PAIR_INVALID,
-  PAIR_AF,
-  PAIR_BC,
-  PAIR_DE,
-  PAIR_HL,
-  PAIR_IY,
-  PAIR_IX,
-  NUM_PAIRS
-} PAIR_ID;
 
 enum
 {
@@ -149,15 +135,6 @@ static const char *asminstnames[] =
  */
 static struct
 {
-  /** Used to optimise setting up of a pair by remembering what it
-      contains and adjusting instead of reloading where possible.
-  */
-  struct
-  {
-    AOP_TYPE last_type;
-    const char *base;
-    int offset;
-  } pairs[NUM_PAIRS];
   struct
   {
 //    int last;
@@ -204,9 +181,9 @@ static struct
   } trace;
 } _G;
 
-bool m6809_regs_used_as_parms_in_calls_from_current_function[IYH_IDX + 1];
+bool m6809_regs_used_as_parms_in_calls_from_current_function[MAX_TREE_DECOMP_IDX + 1];
 bool m6809_symmParm_in_calls_from_current_function;
-bool m6809_regs_preserved_in_calls_from_current_function[IYH_IDX + 1];
+bool m6809_regs_preserved_in_calls_from_current_function[MAX_TREE_DECOMP_IDX + 1];
 
 static const char *aopGet (asmop * aop, int offset, bool bit16);
 
@@ -233,57 +210,19 @@ m6809_init_asmops (void)
 {
   asmop_a.type = AOP_REG;
   asmop_a.size = 1;
-  asmop_a.aopu.aop_reg[0] = regsM6809 + A_IDX;
+  asmop_a.aopu.aop_reg[0] = m6809_regs + A_IDX;
   memset (asmop_a.regs, -1, 9);
   asmop_a.regs[A_IDX] = 0;
   asmop_b.type = AOP_REG;
   asmop_b.size = 1;
-  asmop_b.aopu.aop_reg[0] = regsM6809 + B_IDX;
+  asmop_b.aopu.aop_reg[0] = m6809_regs + B_IDX;
   memset (asmop_b.regs, -1, 9);
   asmop_b.regs[B_IDX] = 0;
-  asmop_c.type = AOP_REG;
-  asmop_c.size = 1;
-  asmop_c.aopu.aop_reg[0] = regsM6809 + C_IDX;
-  memset (asmop_c.regs, -1, 9);
-  asmop_c.regs[C_IDX] = 0;
   asmop_d.type = AOP_REG;
   asmop_d.size = 1;
-  asmop_d.aopu.aop_reg[0] = regsM6809 + D_IDX;
+  asmop_d.aopu.aop_reg[0] = m6809_regs + D_IDX;
   memset (asmop_d.regs, -1, 9);
   asmop_d.regs[D_IDX] = 0;
-  asmop_e.type = AOP_REG;
-  asmop_e.size = 1;
-  asmop_e.aopu.aop_reg[0] = regsM6809 + E_IDX;
-  memset (asmop_e.regs, -1, 9);
-  asmop_e.regs[E_IDX] = 0;
-  asmop_h.type = AOP_REG;
-  asmop_h.size = 1;
-  asmop_h.aopu.aop_reg[0] = regsM6809 + H_IDX;
-  memset (asmop_h.regs, -1, 9);
-  asmop_h.regs[H_IDX] = 0;
-  asmop_l.type = AOP_REG;
-  asmop_l.size = 1;
-  asmop_l.aopu.aop_reg[0] = regsM6809 + L_IDX;
-  memset (asmop_l.regs, -1, 9);
-  asmop_l.regs[L_IDX] = 0;
-  asmop_iyh.type = AOP_REG;
-  asmop_iyh.size = 1;
-  asmop_iyh.aopu.aop_reg[0] = regsM6809 + IYH_IDX;
-  memset (asmop_iyh.regs, -1, 9);
-  asmop_iyh.regs[IYH_IDX] = 0;
-  asmop_iyl.type = AOP_REG;
-  asmop_iyl.size = 1;
-  asmop_iyl.aopu.aop_reg[0] = regsM6809 + IYL_IDX;
-  memset (asmop_iyl.regs, -1, 9);
-  asmop_iyl.regs[IYL_IDX] = 0;
-
-  asmop_hl.type = AOP_REG;
-  asmop_hl.size = 2;
-  asmop_hl.aopu.aop_reg[0] = regsM6809 + L_IDX;
-  asmop_hl.aopu.aop_reg[1] = regsM6809 + H_IDX;
-  memset (asmop_hl.regs, -1, 9);
-  asmop_hl.regs[L_IDX] = 0;
-  asmop_hl.regs[H_IDX] = 1;
 
   asmop_zero.type = AOP_LIT;
   asmop_zero.aopu.aop_lit = constVal ("0");
@@ -298,28 +237,6 @@ m6809_init_asmops (void)
   asmop_return.type = AOP_REG;
   asmop_return.size = 4;
   memset (asmop_return.regs, -1, 9);
-  if (IS_GB)
-    {
-      asmop_return.aopu.aop_reg[0] = regsM6809 + E_IDX;
-      asmop_return.regs[E_IDX] = 0;
-      asmop_return.aopu.aop_reg[1] = regsM6809 + D_IDX;
-      asmop_return.regs[D_IDX] = 1;
-      asmop_return.aopu.aop_reg[2] = regsM6809 + L_IDX;
-      asmop_return.regs[L_IDX] = 2;
-      asmop_return.aopu.aop_reg[3] = regsM6809 + H_IDX;
-      asmop_return.regs[H_IDX] = 2;
-    }
-  else
-    {
-      asmop_return.aopu.aop_reg[0] = regsM6809 + L_IDX;
-      asmop_return.regs[L_IDX] = 0;
-      asmop_return.aopu.aop_reg[1] = regsM6809 + H_IDX;
-      asmop_return.regs[H_IDX] = 1;
-      asmop_return.aopu.aop_reg[2] = regsM6809 + E_IDX;
-      asmop_return.regs[E_IDX] = 2;
-      asmop_return.aopu.aop_reg[3] = regsM6809 + D_IDX;
-      asmop_return.regs[D_IDX] = 3;
-    }
 }
 
 static bool regalloc_dry_run;
@@ -400,18 +317,6 @@ aopInReg (const asmop * aop, int offset, short rIdx)
     {
       return (aopInReg (aop, offset, IYL_IDX) && aopInReg (aop, offset + 1, IYH_IDX));
     }
-  if (rIdx == BC_IDX)
-    {
-      return (aopInReg (aop, offset, C_IDX) && aopInReg (aop, offset + 1, B_IDX));
-    }
-  if (rIdx == DE_IDX)
-    {
-      return (aopInReg (aop, offset, E_IDX) && aopInReg (aop, offset + 1, D_IDX));
-    }
-  if (rIdx == HL_IDX)
-    {
-      return (aopInReg (aop, offset, L_IDX) && aopInReg (aop, offset + 1, H_IDX));
-    }
 
   return (aop->aopu.aop_reg[offset]->rIdx == rIdx);
 }
@@ -461,107 +366,6 @@ isLastUse (const iCode * ic, operand * op)
     }
 
   return FALSE;
-}
-
-static PAIR_ID
-_getTempPairId (void)
-{
-  if (IS_GB)
-    {
-      return PAIR_DE;
-    }
-  else
-    {
-      return PAIR_HL;
-    }
-}
-
-static const char *
-_getTempPairName (void)
-{
-  return _pairs[_getTempPairId ()].name;
-}
-
-static bool
-isPairInUse (PAIR_ID id, const iCode * ic)
-{
-  if (id == PAIR_DE)
-    {
-      return bitVectBitValue (ic->rMask, D_IDX) || bitVectBitValue (ic->rMask, E_IDX);
-    }
-  else if (id == PAIR_BC)
-    {
-      return bitVectBitValue (ic->rMask, B_IDX) || bitVectBitValue (ic->rMask, C_IDX);
-    }
-  else
-    {
-      wassertl (0, "Only implemented for DE and BC");
-      return TRUE;
-    }
-}
-
-static bool
-isPairDead (PAIR_ID id, const iCode * ic)
-{
-  const bitVect *r = (!options.oldralloc ? ic->rSurv :
-                      (POINTER_SET (ic) ? ic->rMask :
-                       (bitVectCplAnd (bitVectCopy (ic->rMask), m6809_rUmaskForOp (IC_RESULT (ic))))));
-
-  if (id == PAIR_DE)
-    {
-      return !(bitVectBitValue (r, D_IDX) || bitVectBitValue (r, E_IDX));
-    }
-  else if (id == PAIR_BC)
-    {
-      return !(bitVectBitValue (r, B_IDX) || bitVectBitValue (r, C_IDX));
-    }
-  else if (id == PAIR_HL)
-    {
-      return !(bitVectBitValue (r, H_IDX) || bitVectBitValue (r, L_IDX));
-    }
-  else if (id == PAIR_IY)
-    {
-      return !(bitVectBitValue (r, IYH_IDX) || bitVectBitValue (r, IYL_IDX));
-    }
-  else
-    {
-      wassertl (0, "Only implemented for DE, BC, HL and IY");
-      return TRUE;
-    }
-}
-
-static PAIR_ID
-getDeadPairId (const iCode * ic)
-{
-  if (isPairDead (PAIR_BC, ic))
-    {
-      return PAIR_BC;
-    }
-  else if (!IS_GB && isPairDead (PAIR_DE, ic))
-    {
-      return PAIR_DE;
-    }
-  else
-    {
-      return PAIR_INVALID;
-    }
-}
-
-static PAIR_ID
-getFreePairId (const iCode * ic)
-{
-  if (!isPairInUse (PAIR_BC, ic))
-    {
-      return PAIR_BC;
-    }
-  else if (!IS_GB && !isPairInUse (PAIR_DE, ic))
-    {
-      return PAIR_DE;
-    }
-  else
-    {
-      return PAIR_INVALID;
-    }
 }
 
 static void
@@ -639,93 +443,6 @@ emit2 (const char *szFormat, ...)
     }
 }
 
-static PAIR_ID
-getPartPairId (const asmop * aop, int offset)
-{
-  if (aop->size <= offset + 1 || offset < 0)
-    {
-      return PAIR_INVALID;
-    }
-
-  if (aop->type != AOP_REG)
-    {
-      return PAIR_INVALID;
-    }
-
-  wassert (aop->aopu.aop_reg[offset] && aop->aopu.aop_reg[offset + 1]);
-
-  if ((aop->aopu.aop_reg[offset]->rIdx == C_IDX) && (aop->aopu.aop_reg[offset + 1]->rIdx == B_IDX))
-    {
-      return PAIR_BC;
-    }
-  if ((aop->aopu.aop_reg[offset]->rIdx == E_IDX) && (aop->aopu.aop_reg[offset + 1]->rIdx == D_IDX))
-    {
-      return PAIR_DE;
-    }
-  if ((aop->aopu.aop_reg[offset]->rIdx == L_IDX) && (aop->aopu.aop_reg[offset + 1]->rIdx == H_IDX))
-    {
-      return PAIR_HL;
-    }
-  if ((aop->aopu.aop_reg[offset]->rIdx == IYL_IDX) && (aop->aopu.aop_reg[offset + 1]->rIdx == IYH_IDX))
-    {
-      return PAIR_IY;
-    }
-
-  return PAIR_INVALID;
-}
-
-static PAIR_ID
-getPairId_o (const asmop * aop, int offset)
-{
-  if (offset >= 0 && offset + 2 <= aop->size)
-    {
-      if (aop->type == AOP_REG)
-        {
-          wassert (aop->aopu.aop_reg[offset] && aop->aopu.aop_reg[offset + 1]);
-
-          if ((aop->aopu.aop_reg[offset]->rIdx == C_IDX) && (aop->aopu.aop_reg[offset + 1]->rIdx == B_IDX))
-            {
-              return PAIR_BC;
-            }
-          if ((aop->aopu.aop_reg[offset]->rIdx == E_IDX) && (aop->aopu.aop_reg[offset + 1]->rIdx == D_IDX))
-            {
-              return PAIR_DE;
-            }
-          if ((aop->aopu.aop_reg[offset]->rIdx == L_IDX) && (aop->aopu.aop_reg[offset + 1]->rIdx == H_IDX))
-            {
-              return PAIR_HL;
-            }
-          if ((aop->aopu.aop_reg[offset]->rIdx == IYL_IDX) && (aop->aopu.aop_reg[offset + 1]->rIdx == IYH_IDX))
-            {
-              return PAIR_IY;
-            }
-        }
-      else if (aop->type == AOP_STR)
-        {
-          int i;
-          for (i = 0; i < NUM_PAIRS; i++)
-            {
-              if (!strcmp (aop->aopu.aop_str[offset], _pairs[i].l) && !strcmp (aop->aopu.aop_str[offset + 1], _pairs[i].h))
-                {
-                  return i;
-                }
-            }
-        }
-    }
-  return PAIR_INVALID;
-}
-
-static PAIR_ID
-getPairId (const asmop * aop)
-{
-  if (aop->size != 2)
-    {
-      return PAIR_INVALID;
-    }
-  return (getPairId_o (aop, 0));
-}
-
-
 /*-----------------------------------------------------------------*/
 /* m6809_emitDebuggerSymbol - associate the current code location    */
 /*   with a debugger symbol                                        */
@@ -768,8 +485,6 @@ ld_cost (const asmop * op1, const asmop * op2)
         case AOP_IMMD:
         case AOP_LIT:
           return (2);
-        case AOP_SFR:          /* 2 from in a, (...) */
-          return ((aopInReg (op1, 0, A_IDX) || op1type == AOP_DUMMY) ? 2 : 3);
         case AOP_STK:
           return (3);
         case AOP_HL:           /* 3 from ld hl, #... */
@@ -777,43 +492,8 @@ ld_cost (const asmop * op1, const asmop * op2)
         case AOP_IY:           /* 4 from ld iy, #... */
         case AOP_EXSTK:        /* 4 from ld iy, #... */
           return (7);
-        case AOP_PAIRPTR:
-          if (op2->aopu.aop_pairId == PAIR_HL)
-            {
-              return (1);
-            }
-          if (op2->aopu.aop_pairId == PAIR_IY || op2->aopu.aop_pairId == PAIR_IX)
-            {
-              return (3);
-            }
-          if (op2->aopu.aop_pairId == PAIR_BC || op2->aopu.aop_pairId == PAIR_DE)
-            {
-              return ((aopInReg (op1, 0, A_IDX) || op1type == AOP_DUMMY) ? 1 : 2);
-            }
         default:
           printf ("ld_cost op1: AOP_REG, op2: %d\n", (int) (op2type));
-          wassert (0);
-        }
-    case AOP_SFR:              /* 2 from out (...), a */
-      switch (op2type)
-        {
-        case AOP_REG:
-        case AOP_DUMMY:
-          return (2);
-        case AOP_IMMD:
-        case AOP_LIT:
-          return (4);
-        case AOP_STK:
-          return (5);
-        case AOP_HL:           /* 3 from ld hl, #... */
-          return (6);
-        case AOP_SFR:
-          return (4);
-        case AOP_IY:           /* 4 from ld iy, #... */
-        case AOP_EXSTK:        /* 4 from ld iy, #... */
-          return (9);
-        default:
-          printf ("ld_cost op1: AOP_SFR, op2: %d\n", (int) (op2type));
           wassert (0);
         }
     case AOP_IY:               /* 4 from ld iy, #... */
@@ -823,8 +503,6 @@ ld_cost (const asmop * op1, const asmop * op2)
         case AOP_IMMD:
         case AOP_LIT:
           return (8);
-        case AOP_SFR:          /* 2 from in a, (...) */
-          return (9);
         case AOP_STK:
         case AOP_HL:           /* 3 from ld hl, #... */
           return (10);
@@ -841,8 +519,6 @@ ld_cost (const asmop * op1, const asmop * op2)
         case AOP_IMMD:
         case AOP_LIT:
           return (4);
-        case AOP_SFR:          /* 2 from in a, (...) */
-          return (5);
         case AOP_STK:
           return (6);
         case AOP_HL:
@@ -850,15 +526,6 @@ ld_cost (const asmop * op1, const asmop * op2)
         case AOP_IY:           /* 4 from ld iy, #... */
         case AOP_EXSTK:
           return (10);
-        case AOP_PAIRPTR:
-          if (op2->aopu.aop_pairId == PAIR_HL || op2->aopu.aop_pairId == PAIR_BC || op2->aopu.aop_pairId == PAIR_DE)
-            {
-              return (4);
-            }
-          if (op2->aopu.aop_pairId == PAIR_IY || op2->aopu.aop_pairId == PAIR_IX)
-            {
-              return (6);
-            }
         default:
           printf ("ld_cost op1: AOP_STK, op2: %d\n", (int) (op2type));
           wassert (0);
@@ -874,7 +541,6 @@ ld_cost (const asmop * op1, const asmop * op2)
           return (5);
         case AOP_STK:
           return (7);
-        case AOP_SFR:
         case AOP_HL:
           return (6);
         case AOP_IY:           /* 4 from ld iy, #... */
@@ -913,15 +579,6 @@ op8_cost (const asmop * op2)
     case AOP_IY:               /* 4 from ld iy, #... */
     case AOP_EXSTK:            /* 4 from ld iy, #... */
       return (7);
-    case AOP_PAIRPTR:
-      if (op2->aopu.aop_pairId == PAIR_HL)
-        {
-          return (1);
-        }
-      if (op2->aopu.aop_pairId == PAIR_IY || op2->aopu.aop_pairId == PAIR_IX)
-        {
-          return (3);
-        }
     default:
       printf ("op8_cost op2: %d\n", (int) (op2->type));
       wassert (0);
@@ -1072,7 +729,6 @@ static const char *aopNames[] =
   "AOP_LIT",
   "AOP_REG",
   "AOP_DIR",
-  "AOP_SFR",
   "AOP_STK",
   "AOP_IMMD",
   "AOP_STR",
@@ -1344,32 +1000,6 @@ aopForSym (const iCode * ic, symbol * sym, bool requires_a)
 
   if (IN_REGSP (space))
     {
-      /*.p.t.20030716 minor restructure to add SFR support to the Z80 */
-      if (IS_GB)
-        {
-          /* if it is in direct space */
-          if (!requires_a)
-            {
-              sym->aop = aop = newAsmop (AOP_SFR);
-              aop->aopu.aop_dir = sym->rname;
-              aop->size = getSize (sym->type);
-              /* emitDebug ("; AOP_SFR for %s", sym->rname); */
-              return aop;
-            }
-        }
-      else
-        {
-          /*.p.t.20030716 adding SFR support to the Z80 port */
-          aop = newAsmop (AOP_SFR);
-          sym->aop = aop;
-          aop->aopu.aop_dir = sym->rname;
-          aop->size = getSize (sym->type);
-          aop->paged = FUNC_REGBANK (sym->type);
-          aop->bcInUse = isPairInUse (PAIR_BC, ic);
-          /* emitDebug (";Z80 AOP_SFR for %s banked:%d bc:%d", sym->rname, FUNC_REGBANK (sym->type), aop->bcInUse); */
-
-          return (aop);
-        }
     }
 
   /* only remaining is far space */
@@ -1563,11 +1193,6 @@ sameRegs (asmop * aop1, asmop * aop2)
 {
   int i;
 
-  if (aop1->type == AOP_SFR || aop2->type == AOP_SFR)
-    {
-      return FALSE;
-    }
-
   if (aop1 == aop2)
     {
       return TRUE;
@@ -1622,24 +1247,10 @@ aopOp (operand * op, const iCode * ic, bool result, bool requires_a)
       return;
     }
 
-  /* if already has a asmop then continue */
-  if (op->aop)
-    {
-      if (op->aop->type == AOP_SFR)
-        {
-          op->aop->bcInUse = isPairInUse (PAIR_BC, ic);
-        }
-      return;
-    }
-
   /* if the underlying symbol has a aop */
   if (IS_SYMOP (op) && OP_SYMBOL (op)->aop)
     {
       op->aop = OP_SYMBOL (op)->aop;
-      if (op->aop->type == AOP_SFR)
-        {
-          op->aop->bcInUse = isPairInUse (PAIR_BC, ic);
-        }
       return;
     }
 
@@ -1692,15 +1303,15 @@ aopOp (operand * op, const iCode * ic, bool result, bool requires_a)
               sym->aop = op->aop = aop = newAsmop (AOP_REG);
               aop->size = getSize (sym->type);
               wassertl (aop->size == 1, "Internal error: Caching in A, but too big to fit in A");
-              aop->aopu.aop_reg[0] = regsM6809 + A_IDX;
+              aop->aopu.aop_reg[0] = m6809_regs + A_IDX;
             }
           else if (sym->accuse == ACCUSE_IY)    /* For compability with old register allocator only */
             {
               sym->aop = op->aop = aop = newAsmop (AOP_REG);
               aop->size = getSize (sym->type);
               wassertl (aop->size <= 2, "Internal error: Caching in IY, but too big to fit in IY");
-              aop->aopu.aop_reg[0] = regsM6809 + IYL_IDX;
-              aop->aopu.aop_reg[0] = regsM6809 + IYH_IDX;
+              aop->aopu.aop_reg[0] = m6809_regs + IYL_IDX;
+              aop->aopu.aop_reg[0] = m6809_regs + IYH_IDX;
             }
           else
             {
@@ -1913,7 +1524,6 @@ aopGetLitWordLong (const asmop * aop, int offset, bool with_hash)
     case AOP_REG:
     case AOP_STK:
     case AOP_DIR:
-    case AOP_SFR:
     case AOP_STR:
     case AOP_CRY:
     case AOP_EXSTK:
@@ -2731,46 +2341,6 @@ aopGet (asmop * aop, int offset, bool bit16)
           dbuf_append_char (&dbuf, 'a');
           break;
 
-        case AOP_SFR:
-          wassertl (!IS_TLCS90, "TLCS-90 does not have a separate I/O space");
-          if (IS_GB)
-            {
-              emit2 ("ldh a, (%s+%d)", aop->aopu.aop_dir, offset);
-              regalloc_dry_run_cost += 2;
-              dbuf_append_char (&dbuf, 'a');
-            }
-          else if (IS_RAB)
-            {
-              emit2 ("ioi");
-              emit2 ("ld a, (%s)", aop->aopu.aop_dir);
-              emit2 ("nop");    /* Workaround for Rabbit 2000 hardware bug. see TN302 for details. */
-              dbuf_append_char (&dbuf, 'a');
-            }
-          else
-            {
-              /*.p.t.20030716 handling for i/o port read access for Z80 */
-              if (aop->paged)
-                {
-                  /* banked mode */
-                  /* reg A goes to address bits 15-8 during "in a,(x)" instruction */
-                  emit2 ("ld a, !msbimmeds", aop->aopu.aop_dir);
-                  emit2 ("in a, (!lsbimmeds)", aop->aopu.aop_dir);
-                }
-              else if (m6809_opts.port_mode == 180)
-                {
-                  /* z180 in0/out0 mode */
-                  emit2 ("in0 a, (%s)", aop->aopu.aop_dir);
-                }
-              else
-                {
-                  /* 8 bit mode */
-                  emit2 ("in a, (%s)", aop->aopu.aop_dir);
-                }
-
-              dbuf_append_char (&dbuf, 'a');
-            }
-          break;
-
         case AOP_REG:
           dbuf_append_str (&dbuf, aop->aopu.aop_reg[offset]->name);
           break;
@@ -2893,7 +2463,7 @@ isConstantString (const char *s)
 #define AOP(op) op->aop
 #define AOP_TYPE(op) AOP(op)->type
 #define AOP_SIZE(op) AOP(op)->size
-#define AOP_NEEDSACC(x) (AOP(x) && ((AOP_TYPE(x) == AOP_CRY) || (AOP_TYPE(x) == AOP_SFR)))
+#define AOP_NEEDSACC(x) (AOP(x) && ((AOP_TYPE(x) == AOP_CRY)))
 #define AOP_IS_PAIRPTR(x, p) (AOP_TYPE (x) == AOP_PAIRPTR && AOP (x)->aopu.aop_pairId == p)
 
 static bool
@@ -2961,78 +2531,6 @@ aopPut (asmop * aop, const char *s, int offset)
           emit2 ("ld a, %s", s);
         }
       emit2 ("ld (%s+%d),a", aop->aopu.aop_dir, offset);
-      break;
-
-    case AOP_SFR:
-      wassertl (!IS_TLCS90, "TLCS-90 does not have a separate I/O space");
-      if (IS_GB)
-        {
-          //  wassert (IS_GB);
-          if (strcmp (s, "a"))
-            {
-              emit2 ("ld a, %s", s);
-            }
-          emit2 ("ldh (%s+%d),a", aop->aopu.aop_dir, offset);
-        }
-      else if (IS_RAB)
-        {
-          if (strcmp (s, "a"))
-            {
-              emit2 ("ld a, %s", s);
-            }
-
-          /* LM 20110928: Need to fix to emit either "ioi" or "ioe"
-           * (for internal vs. external I/O space
-           */
-          emit2 ("ioi");
-          emit2 ("ld (%s),a", aop->aopu.aop_dir);
-          emit2 ("nop");        /* Workaround for Rabbit 2000 hardware bug. see TN302 for details. */
-        }
-      else
-        {
-          /*.p.t.20030716 handling for i/o port read access for Z80 */
-          if (aop->paged)
-            {
-              /* banked mode */
-              if (aop->bcInUse)
-                {
-                  emit2 ("push bc");
-                }
-
-              if (strlen (s) != 1 || (s[0] != 'a' && s[0] != 'd' && s[0] != 'e' && s[0] != 'h' && s[0] != 'l'))
-                {
-                  emit2 ("ld a, %s", s);
-                  s = "a";
-                }
-
-              emit2 ("ld bc, !hashedstr", aop->aopu.aop_dir);
-              emit2 ("out (c),%s", s);
-
-              if (aop->bcInUse)
-                {
-                  emit2 ("pop bc");
-                }
-              else
-                {
-                  spillPair (PAIR_BC);
-                }
-            }
-          else if (m6809_opts.port_mode == 180)
-            {
-              /* z180 in0/out0 mode */
-              emit2 ("ld a, %s", s);
-              emit2 ("out0 (%s), a", aop->aopu.aop_dir);
-            }
-          else
-            {
-              /* 8 bit mode */
-              if (strcmp (s, "a"))
-                {
-                  emit2 ("ld a, %s", s);
-                }
-              emit2 ("out (%s), a", aop->aopu.aop_dir);
-            }
-        }
       break;
 
     case AOP_REG:
@@ -3294,7 +2792,6 @@ cheapMove (asmop * to, int to_offset, asmop * from, int from_offset, bool a_dead
     }
   else if (!aopInReg (to, to_offset, A_IDX) && !aopInReg (from, from_offset, A_IDX) &&  // Go through a.
            (from->type == AOP_DIR ||
-            from->type == AOP_SFR ||
             to->type == AOP_IY && (from->type == AOP_EXSTK || IS_GB && from->type == AOP_STK) ||
             (to->type == AOP_HL || IS_GB && to->type == AOP_STK) && (aopInReg (from, from_offset, L_IDX)
                 || aopInReg (from, from_offset, H_IDX))))
@@ -8231,47 +7728,6 @@ genCmp (operand * left, operand * right, operand * result, iCode * ifx, int sign
       /* Do a long subtract of right from left. */
       size = max (AOP_SIZE (left), AOP_SIZE (right));
 
-      if (AOP_TYPE (right) == AOP_SFR)  /* Avoid overwriting A */
-        {
-          bool save_a, save_b, save_bc;
-          wassertl (size == 1, "Right side sfr in comparison with more than 8 bits.");
-
-          save_b = bitVectBitValue (ic->rSurv, B_IDX);
-          save_bc = (save_b && bitVectBitValue (ic->rSurv, C_IDX));
-          save_a = (aopInReg (left->aop, 0, A_IDX) ||
-                    aopInReg (left->aop, 0, B_IDX) && save_b || aopInReg (left->aop, 0, C_IDX) && !save_b && save_bc);
-
-          if (save_bc)
-            {
-              _push (PAIR_BC);
-            }
-          if (save_a)
-            {
-              cheapMove (ASMOP_A, 0, AOP (right), 0, true);
-              _push (PAIR_AF);
-            }
-          else
-            {
-              cheapMove (ASMOP_A, 0, AOP (right), 0, true);
-            }
-          cheapMove (save_b ? ASMOP_C : ASMOP_B, 0, ASMOP_A, 0, true);
-          if (save_a)
-            {
-              _pop (PAIR_AF);
-            }
-          else
-            {
-              cheapMove (ASMOP_A, 0, AOP (left), 0, true);
-            }
-          emit3_o (A_SUB, ASMOP_A, 0, save_b ? ASMOP_C : ASMOP_B, offset);
-          if (save_bc)
-            {
-              _pop (PAIR_BC);
-            }
-          result_in_carry = TRUE;
-          goto fix;
-        }
-
       // Preserve A if necessary
       if (ifx && size == 1 && !sign && aopInReg (left->aop, 0, A_IDX) && bitVectBitValue (ic->rSurv, A_IDX) &&
           (AOP_TYPE (right) == AOP_LIT || AOP_TYPE (right) == AOP_REG && AOP (right)->aopu.aop_reg[offset]->rIdx != IYL_IDX
@@ -10915,12 +10371,12 @@ genLeftShift (const iCode * ic)
     }
   if (shift_by_lit && shiftcount > 1)
     {
-      emit2 ("ld %s, !immedbyte", countreg == A_IDX ? "a" : regsM6809[countreg].name, shiftcount);
+      emit2 ("ld %s, !immedbyte", countreg == A_IDX ? "a" : m6809_regs[countreg].name, shiftcount);
       regalloc_dry_run_cost += 2;
     }
   else if (!shift_by_lit)
     {
-      emit2 ("inc %s", countreg == A_IDX ? "a" : regsM6809[countreg].name);
+      emit2 ("inc %s", countreg == A_IDX ? "a" : m6809_regs[countreg].name);
       regalloc_dry_run_cost += 1;
       if (!regalloc_dry_run)
         {
@@ -10997,7 +10453,7 @@ genLeftShift (const iCode * ic)
         }
       else
         {
-          emit2 ("dec %s", countreg == A_IDX ? "a" : regsM6809[countreg].name);
+          emit2 ("dec %s", countreg == A_IDX ? "a" : m6809_regs[countreg].name);
           if (!regalloc_dry_run)
             {
               emit2 ("jr NZ,!tlabel", labelKey2num (tlbl->key));
@@ -11358,12 +10814,12 @@ genRightShift (const iCode * ic)
     }
   else if (shift_by_lit && shiftcount > 1)
     {
-      emit2 ("ld %s, !immedbyte", countreg == A_IDX ? "a" : regsM6809[countreg].name, shiftcount);
+      emit2 ("ld %s, !immedbyte", countreg == A_IDX ? "a" : m6809_regs[countreg].name, shiftcount);
       regalloc_dry_run_cost += 2;
     }
   else if (!shift_by_lit)
     {
-      emit2 ("inc %s", countreg == A_IDX ? "a" : regsM6809[countreg].name);
+      emit2 ("inc %s", countreg == A_IDX ? "a" : m6809_regs[countreg].name);
       regalloc_dry_run_cost += 1;
       if (!regalloc_dry_run)
         {
@@ -11428,7 +10884,7 @@ genRightShift (const iCode * ic)
         }
       else
         {
-          emit2 ("dec %s", countreg == A_IDX ? "a" : regsM6809[countreg].name);
+          emit2 ("dec %s", countreg == A_IDX ? "a" : m6809_regs[countreg].name);
           if (!regalloc_dry_run)
             {
               emit2 ("jr NZ, !tlabel", labelKey2num (tlbl->key));

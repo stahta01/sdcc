@@ -34,13 +34,15 @@ typedef enum
   /* Is in a register */
   AOP_REG,
   /* Should be placed on the stack can happen only for the result */
-//  AOP_STK,
+  AOP_STK,
   /* Is a stack location */
   AOP_STL,
   /* Is an immediate value */
   AOP_IMMD,
   /* Is in direct space */
   AOP_DIR,
+  /* Is in the extended stack pointer (IU on the M6809) */
+  AOP_EXSTK,
   /* Read undefined, discard writes */
   AOP_DUMMY,
   /* Bit value in the condition register */
@@ -69,6 +71,7 @@ typedef struct asmop
   union
   {
     value *aop_lit;
+    reg_info *aop_reg[4];       /* array of registers */
     struct
       {
         char *immd;

@@ -54,43 +54,21 @@ M6809_OPTS m6809_opts;
 
 static OPTION _m6809_options[] =
 {
-  {0, OPTION_CALLEE_SAVES_BC, &m6809_opts.calleeSavesBC, "Force a called function to always save BC"},
   {0, OPTION_PORTMODE, NULL, "Determine PORT I/O mode (z80/z180)"},
-  {0, OPTION_ASM, NULL, "Define assembler name (rgbds/asxxxx/isas/z80asm/gas)"},
+  {0, OPTION_ASM, NULL, "Define assembler name (asxxxx)"},
   {0, OPTION_CODE_SEG, &options.code_seg, "<name> use this name for the code segment", CLAT_STRING},
   {0, OPTION_CONST_SEG, &options.const_seg, "<name> use this name for the const segment", CLAT_STRING},
   {0, OPTION_DATA_SEG, &options.data_seg, "<name> use this name for the data segment", CLAT_STRING},
   {0, OPTION_NO_STD_CRT0, &options.no_std_crt0, "For the z80/gbz80 do not link default crt0.rel"},
-  {0, OPTION_RESERVE_IY, &m6809_opts.reserveIY, "Do not use IY (incompatible with --fomit-frame-pointer)"},
   {0, OPTION_OLDRALLOC, &options.oldralloc, "Use old register allocator"},
-  {0, OPTION_FRAMEPOINTER, &m6809_opts.noOmitFramePtr, "Do not omit frame pointer"},
   {0, OPTION_EMIT_EXTERNS, NULL, "Emit externs list in generated asm"},
-  {0, OPTION_LEGACY_BANKING, &m6809_opts.legacyBanking, "Use legacy method to call banked functions"},
-  {0, OPTION_NMOS_Z80, &m6809_opts.nmosZ80, "Generate workaround for NMOS Z80 when saving IFF2"},
-  {0, NULL}
-};
-
-static OPTION _gbz80_options[] =
-{
-  {0, OPTION_BO, NULL, "<num> use code bank <num>"},
-  {0, OPTION_BA, NULL, "<num> use data bank <num>"},
-  {0, OPTION_CALLEE_SAVES_BC, &m6809_opts.calleeSavesBC, "Force a called function to always save BC"},
-  {0, OPTION_CODE_SEG, &options.code_seg, "<name> use this name for the code segment", CLAT_STRING},
-  {0, OPTION_CONST_SEG, &options.const_seg, "<name> use this name for the const segment", CLAT_STRING},
-  {0, OPTION_DATA_SEG, &options.data_seg, "<name> use this name for the data segment", CLAT_STRING},
-  {0, OPTION_NO_STD_CRT0, &options.no_std_crt0, "For the z80/gbz80 do not link default crt0.rel"},
-  {0, OPTION_LEGACY_BANKING, &m6809_opts.legacyBanking, "Use legacy method to call banked functions"},
   {0, NULL}
 };
 
 typedef enum
 {
   /* Must be first */
-  ASM_TYPE_ASXXXX,
-  ASM_TYPE_RGBDS,
-  ASM_TYPE_ISAS,
-  ASM_TYPE_Z80ASM,
-  ASM_TYPE_GAS
+  ASM_TYPE_ASXXXX
 }
 ASM_TYPE;
 
@@ -152,7 +130,7 @@ extern PORT m6809_port;
 extern PORT r2k_port;
 extern PORT gbz80_port;
 
-#include "mappings.i"
+// #include "mappings.i"
 
 static builtins _m6809_builtins[] =
 {
@@ -167,80 +145,25 @@ static builtins _m6809_builtins[] =
 static void
 _m6809_init (void)
 {
-  m6809_opts.sub = SUB_Z80;
+  m6809_opts.sub = SUB_M6809;
   switch (_G.asmType)
     {
-    case ASM_TYPE_GAS:
-      asm_addTree (&_gas_z80);
-      break;
     default:
-      asm_addTree (&_asxxxx_z80);
+//      asm_addTree (&_asxxxx_m6809);
       break;
     }
 }
 
 static void
-_z180_init (void)
+_h6309_init (void)
 {
-  m6809_opts.sub = SUB_Z180;
+  m6809_opts.sub = SUB_H6309;
   switch (_G.asmType)
     {
-    case ASM_TYPE_GAS:
-      asm_addTree (&_gas_z80);
-      break;
     default:
-      asm_addTree (&_asxxxx_z80);
+//      asm_addTree (&_asxxxx_m6809);
       break;
     }
-}
-
-static void
-_r2k_init (void)
-{
-  m6809_opts.sub = SUB_R2K;
-  asm_addTree (&_asxxxx_r2k);
-}
-
-static void
-_r3ka_init (void)
-{
-  m6809_opts.sub = SUB_R3KA;
-  asm_addTree (&_asxxxx_r2k);
-}
-
-static void
-_gbz80_init (void)
-{
-  m6809_opts.sub = SUB_GBZ80;
-}
-
-static void
-_tlcs90_init (void)
-{
-  m6809_opts.sub = SUB_TLCS90;
-  asm_addTree (&_asxxxx_z80);
-}
-
-static void
-_ez80_z80_init (void)
-{
-  m6809_opts.sub = SUB_EZ80_Z80;
-  switch (_G.asmType)
-    {
-    case ASM_TYPE_GAS:
-      asm_addTree (&_gas_z80);
-      break;
-    default:
-      asm_addTree (&_asxxxx_z80);
-      break;
-    }
-}
-
-static void
-_z80n_init (void)
-{
-  m6809_opts.sub = SUB_Z80N;
-  asm_addTree (&_asxxxx_z80);
 }
 
 static void
@@ -313,19 +236,6 @@ do_pragma (int id, const char *name, const char *cp)
               dbuf_printf (&buffer, "CODE_%d", token.val.int_val);
               break;
 
-            case ASM_TYPE_RGBDS:
-              dbuf_printf (&buffer, "ROMX,BANK[%d]", token.val.int_val);
-              break;
-
-            case ASM_TYPE_ISAS:
-              /* PENDING: what to use for ISAS? */
-              dbuf_printf (&buffer, "CODE,BANK(%d)", token.val.int_val);
-              break;
-
-            case ASM_TYPE_GAS:
-              dbuf_printf (&buffer, ".ovly%04x", token.val.int_val);
-              break;
-
             default:
               wassert (0);
             }
@@ -372,27 +282,6 @@ do_pragma (int id, const char *name, const char *cp)
         {
           err = 1;
           break;
-        }
-
-      if (!strcmp (str, "z80"))
-        {
-          m6809_opts.port_mode = 80;
-        }
-      else if (!strcmp (str, "z180"))
-        {
-          m6809_opts.port_mode = 180;
-        }
-      else if (!strcmp (str, "save"))
-        {
-          m6809_opts.port_back = m6809_opts.port_mode;
-        }
-      else if (!strcmp (str, "restore"))
-        {
-          m6809_opts.port_mode = m6809_opts.port_back;
-        }
-      else
-        {
-          err = 1;
         }
     }
     break;
@@ -529,107 +418,14 @@ _parseOptions (int *pargc, char **argv, int *i)
 {
   if (argv[*i][0] == '-')
     {
-      if (IS_GB)
-        {
-          if (!strncmp (argv[*i], OPTION_BO, sizeof (OPTION_BO) - 1))
-            {
-              /* ROM bank */
-              int bank = getIntArg (OPTION_BO, argv, i, *pargc);
-              struct dbuf_s buffer;
-
-              dbuf_init (&buffer, 16);
-              if (_G.asmType == ASM_TYPE_RGBDS)
-                {
-                  dbuf_printf (&buffer, "ROMX,BANK[%u]", bank);
-                }
-              else
-                {
-                  dbuf_printf (&buffer, "CODE_%u", bank);
-                }
-              dbuf_c_str (&buffer);
-              options.code_seg = (char *) dbuf_detach (&buffer);
-              return TRUE;
-            }
-          else if (!strncmp (argv[*i], OPTION_BA, sizeof (OPTION_BA) - 1))
-            {
-              /* RAM bank */
-              int bank = getIntArg (OPTION_BA, argv, i, *pargc);
-              struct dbuf_s buffer;
-
-              dbuf_init (&buffer, 16);
-              if (_G.asmType == ASM_TYPE_RGBDS)
-                {
-                  dbuf_printf (&buffer, "SRAM,BANK[%u]", bank);
-                }
-              else
-                {
-                  dbuf_printf (&buffer, "DATA_%u", bank);
-                }
-              dbuf_c_str (&buffer);
-              options.data_seg = (char *) dbuf_detach (&buffer);
-              return TRUE;
-            }
-        }
 
       if (!strncmp (argv[*i], OPTION_ASM, sizeof (OPTION_ASM) - 1))
         {
           char *asmblr = getStringArg (OPTION_ASM, argv, i, *pargc);
 
-          if (!strcmp (asmblr, "rgbds"))
-            {
-              asm_addTree (&_rgbds_gb);
-              // rgbds doesn't understand that
-              options.noOptsdccInAsm = true;
-
-              gbz80_port.assembler.cmd = _gbz80_rgbasmCmd;
-              gbz80_port.linker.cmd = _gbz80_rgblinkCmd;
-              gbz80_port.linker.do_link = _gbz80_rgblink;
-
-              if (!(options.code_seg && strcmp (options.code_seg, CODE_NAME)))
-                {
-                  if (options.code_seg)
-                    {
-                      Safe_free (options.code_seg);
-                    }
-                  options.code_seg = Safe_strdup ("ROMX");
-                }
-              if (!(options.data_seg && strcmp (options.data_seg, DATA_NAME)))
-                {
-                  if (options.data_seg)
-                    {
-                      Safe_free (options.data_seg);
-                    }
-                  options.data_seg = Safe_strdup ("WRAMX");
-                }
-
-              _G.asmType = ASM_TYPE_RGBDS;
-              return TRUE;
-            }
-          else if (!strcmp (asmblr, "asxxxx"))
+          if (!strcmp (asmblr, "asxxxx"))
             {
               _G.asmType = ASM_TYPE_ASXXXX;
-              return TRUE;
-            }
-          else if (!strcmp (asmblr, "isas"))
-            {
-              asm_addTree (&_isas_gb);
-              /* Munge the function prefix */
-              gbz80_port.fun_prefix = "";
-              _G.asmType = ASM_TYPE_ISAS;
-              return TRUE;
-            }
-          else if (!strcmp (asmblr, "z80asm"))
-            {
-              port->assembler.externGlobal = TRUE;
-              asm_addTree (&_z80asm_z80);
-              _G.asmType = ASM_TYPE_ISAS;
-              return TRUE;
-            }
-          else if (!strcmp (asmblr, "gas"))
-            {
-              port->assembler.externGlobal = TRUE;
-              asm_addTree (&_gas_z80);
-              _G.asmType = ASM_TYPE_GAS;
               return TRUE;
             }
         }
@@ -972,7 +768,7 @@ oclsExpense (struct memmap *oclass)
     " {z80extraobj}"
 */
 
-static const char *_z80LinkCmd[] =
+static const char *_m6809LinkCmd[] =
 {
   "sdldz80", "-nf", "$1", NULL
 };
@@ -988,7 +784,7 @@ static const char *_gnuLdCmd[] = {
 };
 */
 /* $3 is replaced by assembler.debug_opts resp. port->assembler.plain_opts */
-static const char *_z80AsmCmd[] =
+static const char *_m6809AsmCmd[] =
 {
   "sdasz80", "$l", "$3", "$2", "$1.asm", NULL
 };
@@ -1016,19 +812,14 @@ static const char *_GnuAsmCmd[] = {
 static const char *const _crt[] = { "crt0.rel", NULL, };
 static const char *const _libs_z80[] = { "z80", NULL, };
 static const char *const _libs_z180[] = { "z180", NULL, };
-static const char *const _libs_r2k[] = { "r2k", NULL, };
-static const char *const _libs_r3ka[] = { "r3ka", NULL, };
-static const char *const _libs_tlcs90[] = { "tlcs90", NULL, };
-static const char *const _libs_gb[] = { "gbz80", NULL, };
-static const char *const _libs_ez80_z80[] = { "ez80_z80", NULL, };
-static const char *const _libs_z80n[] = { "z80n", NULL, };
+
 
 /* Globals */
 PORT m6809_port =
 {
-  TARGET_ID_Z80,
-  "z80",
-  "Zilog Z80",                  /* Target name */
+  TARGET_ID_M6809,
+  "m6809",
+  "Motorola MC6809",            /* Target name */
   NULL,                         /* Processor name */
   {
     glue,
@@ -1038,7 +829,7 @@ PORT m6809_port =
     NULL,                        /* model == target */
   },
   {                             /* Assembler */
-    _z80AsmCmd,
+    _m6809AsmCmd,
     NULL,
     "-plosgffwy",                /* Options with debug */
     "-plosgffw",                 /* Options without debug */
@@ -1046,7 +837,7 @@ PORT m6809_port =
     ".asm"
   },
   {                             /* Linker */
-    _z80LinkCmd,                 //NULL,
+    _m6809LinkCmd,                 //NULL,
     NULL,                        //LINKCMD,
     NULL,
     ".rel",
@@ -1064,8 +855,8 @@ PORT m6809_port =
     z80canAssign,
     z80notUsedFrom,
     z80symmParmStack,
-    z80canJoinRegs,
-    z80canSplitReg,
+    0,
+    0,
   },
   /* Sizes: char, short, int, long, long long, near ptr, far ptr, gptr, func ptr, banked func ptr, bit, float */
   {1, 2, 2, 4, 8, 2, 2, 2, 2, 2, 1, 4},
@@ -1112,904 +903,6 @@ PORT m6809_port =
   },
   "_",
   _m6809_init,
-  _parseOptions,
-  _m6809_options,
-  NULL,
-  _finaliseOptions,
-  _setDefaultOptions,
-  m6809_assignRegisters,
-  _getRegName,
-  _getRegByName,
-  NULL,
-  _keywords,
-  0,                            /* no assembler preamble */
-  NULL,                         /* no genAssemblerEnd */
-  0,                            /* no local IVT generation code */
-  0,                            /* no genXINIT code */
-  NULL,                         /* genInitStartup */
-  _reset_regparm,
-  _reg_parm,
-  _process_pragma,
-  NULL,
-  _hasNativeMulFor,
-  hasExtBitOp,                  /* hasExtBitOp */
-  oclsExpense,                  /* oclsExpense */
-  TRUE,
-  TRUE,                         /* little endian */
-  0,                            /* leave lt */
-  0,                            /* leave gt */
-  1,                            /* transform <= to ! > */
-  1,                            /* transform >= to ! < */
-  1,                            /* transform != to !(a == b) */
-  0,                            /* leave == */
-  FALSE,                        /* Array initializer support. */
-  0,                            /* no CSE cost estimation yet */
-  _m6809_builtins,                /* builtin functions */
-  GPOINTER,                     /* treat unqualified pointers as "generic" pointers */
-  1,                            /* reset labelKey to 1 */
-  1,                            /* globals & local statics allowed */
-  9,                            /* Number of registers handled in the tree-decomposition-based register allocator in SDCCralloc.hpp */
-  PORT_MAGIC
-};
-
-PORT z180_port =
-{
-  TARGET_ID_Z180,
-  "z180",
-  "Zilog Z180",                 /* Target name */
-  NULL,                         /* Processor name */
-  {
-    glue,
-    FALSE,
-    NO_MODEL,
-    NO_MODEL,
-    NULL,                        /* model == target */
-  },
-  {                             /* Assembler */
-    _z80AsmCmd,
-    NULL,
-    "-plosgffwy",                /* Options with debug */
-    "-plosgffw",                 /* Options without debug */
-    0,
-    ".asm"
-  },
-  {                             /* Linker */
-    _z80LinkCmd,                 //NULL,
-    NULL,                        //LINKCMD,
-    NULL,
-    ".rel",
-    1,
-    _crt,                        /* crt */
-    _libs_z180,                  /* libs */
-  },
-  {                             /* Peephole optimizer */
-    _m6809_defaultRules,
-    z80instructionSize,
-    NULL,
-    NULL,
-    NULL,
-    z80notUsed,
-    z80canAssign,
-    z80notUsedFrom,
-    z80symmParmStack,
-    z80canJoinRegs,
-    z80canSplitReg,
-  },
-  /* Sizes: char, short, int, long, long long, near ptr, far ptr, gptr, func ptr, banked func ptr, bit, float */
-  {1, 2, 2, 4, 8, 2, 2, 2, 2, 2, 1, 4},
-  /* tags for generic pointers */
-  {0x00, 0x40, 0x60, 0x80},     /* far, near, xstack, code */
-  {
-    "XSEG",
-    "STACK",
-    "CODE",
-    "DATA",
-    NULL,                        /* idata */
-    NULL,                        /* pdata */
-    NULL,                        /* xdata */
-    NULL,                        /* bit */
-    "RSEG (ABS)",
-    "GSINIT",
-    NULL,                        /* overlay */
-    "GSFINAL",
-    "HOME",
-    NULL,                        /* xidata */
-    NULL,                        /* xinit */
-    NULL,                        /* const_name */
-    "CABS (ABS)",                /* cabs_name */
-    "DABS (ABS)",                /* xabs_name */
-    NULL,                        /* iabs_name */
-    "INITIALIZED",               /* name of segment for initialized variables */
-    "INITIALIZER",               /* name of segment for copies of initialized variables in code space */
-    NULL,
-    NULL,
-    1,                           /* CODE  is read-only */
-    1                            /* No fancy alignments supported. */
-  },
-  {NULL, NULL},
-  {-1, 0, 0, 4, 0, 3, 0},
-  {-1, FALSE},
-  {m6809_emitDebuggerSymbol},
-  {
-    256,                         /* maxCount */
-    3,                           /* sizeofElement */
-    {6, 7, 8},                   /* sizeofMatchJump[] - Assumes operand allocated to registers */
-    {6, 9, 15},                  /* sizeofRangeCompare[] - Assumes operand allocated to registers */
-    1,                           /* sizeofSubtract - Assumes use of a singel inc or dec */
-    9,                           /* sizeofDispatch - Assumes operand allocated to register e or c */
-  },
-  "_",
-  _z180_init,
-  _parseOptions,
-  _m6809_options,
-  NULL,
-  _finaliseOptions,
-  _setDefaultOptions,
-  m6809_assignRegisters,
-  _getRegName,
-  _getRegByName,
-  NULL,
-  _keywords,
-  0,                            /* no assembler preamble */
-  NULL,                         /* no genAssemblerEnd */
-  0,                            /* no local IVT generation code */
-  0,                            /* no genXINIT code */
-  NULL,                         /* genInitStartup */
-  _reset_regparm,
-  _reg_parm,
-  _process_pragma,
-  NULL,
-  _hasNativeMulFor,
-  hasExtBitOp,                  /* hasExtBitOp */
-  oclsExpense,                  /* oclsExpense */
-  TRUE,
-  TRUE,                         /* little endian */
-  0,                            /* leave lt */
-  0,                            /* leave gt */
-  1,                            /* transform <= to ! > */
-  1,                            /* transform >= to ! < */
-  1,                            /* transform != to !(a == b) */
-  0,                            /* leave == */
-  FALSE,                        /* Array initializer support. */
-  0,                            /* no CSE cost estimation yet */
-  _m6809_builtins,                /* builtin functions */
-  GPOINTER,                     /* treat unqualified pointers as "generic" pointers */
-  1,                            /* reset labelKey to 1 */
-  1,                            /* globals & local statics allowed */
-  9,                            /* Number of registers handled in the tree-decomposition-based register allocator in SDCCralloc.hpp */
-  PORT_MAGIC
-};
-
-PORT r2k_port =
-{
-  TARGET_ID_R2K,
-  "r2k",
-  "Rabbit 2000",                /* Target name */
-  NULL,                         /* Processor name */
-  {
-    glue,
-    FALSE,
-    NO_MODEL,
-    NO_MODEL,
-    NULL,                        /* model == target */
-  },
-  {                             /* Assembler */
-    _r2kAsmCmd,
-    NULL,
-    "-plosgffwy",                /* Options with debug */
-    "-plosgffw",                 /* Options without debug */
-    0,
-    ".asm"
-  },
-  {                             /* Linker */
-    _z80LinkCmd,                 //NULL,
-    NULL,                        //LINKCMD,
-    NULL,
-    ".rel",
-    1,
-    _crt,                        /* crt */
-    _libs_r2k,                   /* libs */
-  },
-  {                             /* Peephole optimizer */
-    _r2k_defaultRules,
-    z80instructionSize,
-    NULL,
-    NULL,
-    NULL,
-    z80notUsed,
-    z80canAssign,
-    z80notUsedFrom,
-    z80symmParmStack,
-    z80canJoinRegs,
-    z80canSplitReg,
-  },
-  /* Sizes: char, short, int, long, long long, near ptr, far ptr, gptr, func ptr, banked func ptr, bit, float */
-  {1, 2, 2, 4, 8, 2, 2, 2, 2, 2, 1, 4},
-  /* tags for generic pointers */
-  {0x00, 0x40, 0x60, 0x80},     /* far, near, xstack, code */
-  {
-    "XSEG",
-    "STACK",
-    "CODE",
-    "DATA",
-    NULL,                        /* idata */
-    NULL,                        /* pdata */
-    NULL,                        /* xdata */
-    NULL,                        /* bit */
-    "RSEG (ABS)",
-    "GSINIT",
-    NULL,                        /* overlay */
-    "GSFINAL",
-    "HOME",
-    NULL,                        /* xidata */
-    NULL,                        /* xinit */
-    NULL,                        /* const_name */
-    "CABS (ABS)",                /* cabs_name */
-    "DABS (ABS)",                /* xabs_name */
-    NULL,                        /* iabs_name */
-    "INITIALIZED",               /* name of segment for initialized variables */
-    "INITIALIZER",               /* name of segment for copies of initialized variables in code space */
-    NULL,
-    NULL,
-    1,                           /* CODE  is read-only */
-    1                            /* No fancy alignments supported. */
-  },
-  {NULL, NULL},
-  {-1, 0, 0, 4, 0, 2, 0},
-  {-1, FALSE},
-  {m6809_emitDebuggerSymbol},
-  {
-    256,                         /* maxCount */
-    3,                           /* sizeofElement */
-    {6, 7, 8},                   /* sizeofMatchJump[] - Assumes operand allocated to registers */
-    {6, 9, 15},                  /* sizeofRangeCompare[] - Assumes operand allocated to registers */
-    1,                           /* sizeofSubtract - Assumes use of a singel inc or dec */
-    9,                           /* sizeofDispatch - Assumes operand allocated to register e or c */
-  },
-  "_",
-  _r2k_init,
-  _parseOptions,
-  _m6809_options,
-  NULL,
-  _finaliseOptions,
-  _setDefaultOptions,
-  m6809_assignRegisters,
-  _getRegName,
-  _getRegByName,
-  NULL,
-  _keywords,
-  0,                            /* no assembler preamble */
-  NULL,                         /* no genAssemblerEnd */
-  0,                            /* no local IVT generation code */
-  0,                            /* no genXINIT code */
-  NULL,                         /* genInitStartup */
-  _reset_regparm,
-  _reg_parm,
-  _process_pragma,
-  NULL,
-  _hasNativeMulFor,
-  hasExtBitOp,                  /* hasExtBitOp */
-  oclsExpense,                  /* oclsExpense */
-  TRUE,
-  TRUE,                         /* little endian */
-  0,                            /* leave lt */
-  0,                            /* leave gt */
-  1,                            /* transform <= to ! > */
-  1,                            /* transform >= to ! < */
-  1,                            /* transform != to !(a == b) */
-  0,                            /* leave == */
-  FALSE,                        /* Array initializer support. */
-  0,                            /* no CSE cost estimation yet */
-  _m6809_builtins,                /* builtin functions */
-  GPOINTER,                     /* treat unqualified pointers as "generic" pointers */
-  1,                            /* reset labelKey to 1 */
-  1,                            /* globals & local statics allowed */
-  9,                            /* Number of registers handled in the tree-decomposition-based register allocator in SDCCralloc.hpp */
-  PORT_MAGIC
-};
-
-PORT r3ka_port =
-{
-  TARGET_ID_R3KA,
-  "r3ka",
-  "Rabbit 3000A",               /* Target name */
-  NULL,                         /* Processor name */
-  {
-    glue,
-    FALSE,
-    NO_MODEL,
-    NO_MODEL,
-    NULL,                        /* model == target */
-  },
-  {                             /* Assembler */
-    _r2kAsmCmd,
-    NULL,
-    "-plosgffwy",                /* Options with debug */
-    "-plosgffw",                 /* Options without debug */
-    0,
-    ".asm"
-  },
-  {                             /* Linker */
-    _z80LinkCmd,                 //NULL,
-    NULL,                        //LINKCMD,
-    NULL,
-    ".rel",
-    1,
-    _crt,                        /* crt */
-    _libs_r3ka,                  /* libs */
-  },
-  {                             /* Peephole optimizer */
-    _r2k_defaultRules,
-    z80instructionSize,
-    0,
-    0,
-    0,
-    z80notUsed,
-    z80canAssign,
-    z80notUsedFrom,
-    z80symmParmStack,
-    z80canJoinRegs,
-    z80canSplitReg,
-  },
-  /* Sizes: char, short, int, long, long long, near ptr, far ptr, gptr, func ptr, banked func ptr, bit, float */
-  {1, 2, 2, 4, 8, 2, 2, 2, 2, 2, 1, 4},
-  /* tags for generic pointers */
-  {0x00, 0x40, 0x60, 0x80},     /* far, near, xstack, code */
-  {
-    "XSEG",
-    "STACK",
-    "CODE",
-    "DATA",
-    NULL,                        /* idata */
-    NULL,                        /* pdata */
-    NULL,                        /* xdata */
-    NULL,                        /* bit */
-    "RSEG (ABS)",
-    "GSINIT",
-    NULL,                        /* overlay */
-    "GSFINAL",
-    "HOME",
-    NULL,                        /* xidata */
-    NULL,                        /* xinit */
-    NULL,                        /* const_name */
-    "CABS (ABS)",                /* cabs_name */
-    "DABS (ABS)",                /* xabs_name */
-    NULL,                        /* iabs_name */
-    "INITIALIZED",               /* name of segment for initialized variables */
-    "INITIALIZER",               /* name of segment for copies of initialized variables in code space */
-    NULL,
-    NULL,
-    1,                           /* CODE  is read-only */
-    1                            /* No fancy alignments supported. */
-  },
-  {NULL, NULL},
-  {-1, 0, 0, 4, 0, 2, 0},
-  {-1, FALSE},
-  {m6809_emitDebuggerSymbol},
-  {
-    256,                         /* maxCount */
-    3,                           /* sizeofElement */
-    {6, 7, 8},                   /* sizeofMatchJump[] - Assumes operand allocated to registers */
-    {6, 9, 15},                  /* sizeofRangeCompare[] - Assumes operand allocated to registers */
-    1,                           /* sizeofSubtract - Assumes use of a singel inc or dec */
-    9,                           /* sizeofDispatch - Assumes operand allocated to register e or c */
-  },
-  "_",
-  _r3ka_init,
-  _parseOptions,
-  _m6809_options,
-  NULL,
-  _finaliseOptions,
-  _setDefaultOptions,
-  m6809_assignRegisters,
-  _getRegName,
-  _getRegByName,
-  NULL,
-  _keywords,
-  0,                            /* no assembler preamble */
-  NULL,                         /* no genAssemblerEnd */
-  0,                            /* no local IVT generation code */
-  0,                            /* no genXINIT code */
-  NULL,                         /* genInitStartup */
-  _reset_regparm,
-  _reg_parm,
-  _process_pragma,
-  NULL,
-  _hasNativeMulFor,
-  hasExtBitOp,                  /* hasExtBitOp */
-  oclsExpense,                  /* oclsExpense */
-  TRUE,
-  TRUE,                         /* little endian */
-  0,                            /* leave lt */
-  0,                            /* leave gt */
-  1,                            /* transform <= to ! > */
-  1,                            /* transform >= to ! < */
-  1,                            /* transform != to !(a == b) */
-  0,                            /* leave == */
-  FALSE,                        /* Array initializer support. */
-  0,                            /* no CSE cost estimation yet */
-  _m6809_builtins,                /* builtin functions */
-  GPOINTER,                     /* treat unqualified pointers as "generic" pointers */
-  1,                            /* reset labelKey to 1 */
-  1,                            /* globals & local statics allowed */
-  9,                            /* Number of registers handled in the tree-decomposition-based register allocator in SDCCralloc.hpp */
-  PORT_MAGIC
-};
-
-/* Globals */
-PORT gbz80_port =
-{
-  TARGET_ID_GBZ80,
-  "gbz80",
-  "Gameboy Z80-like",           /* Target name */
-  NULL,
-  {
-    glue,
-    FALSE,
-    NO_MODEL,
-    NO_MODEL,
-    NULL,                        /* model == target */
-  },
-  {                             /* Assembler */
-    _gbAsmCmd,
-    NULL,
-    "-plosgffwy",                /* Options with debug */
-    "-plosgffw",                 /* Options without debug */
-    0,
-    ".asm",
-    NULL                         /* no do_assemble function */
-  },
-  {                             /* Linker */
-    _gbLinkCmd,                  //NULL,
-    NULL,                        //LINKCMD,
-    NULL,
-    ".rel",
-    1,
-    _crt,                        /* crt */
-    _libs_gb,                    /* libs */
-  },
-  {                             /* Peephole optimizer */
-    _gbz80_defaultRules,
-    z80instructionSize,
-    NULL,
-    NULL,
-    NULL,
-    z80notUsed,
-    z80canAssign,
-    z80notUsedFrom,
-    z80symmParmStack,
-    z80canJoinRegs,
-    z80canSplitReg,
-  },
-  /* Sizes: char, short, int, long, long long, near ptr, far ptr, gptr, func ptr, banked func ptr, bit, float */
-  {1, 2, 2, 4, 8, 2, 2, 2, 2, 2, 1, 4},
-  /* tags for generic pointers */
-  {0x00, 0x40, 0x60, 0x80},     /* far, near, xstack, code */
-  {
-    "XSEG",
-    "STACK",
-    "CODE",
-    "DATA",
-    NULL,                        /* idata */
-    NULL,                        /* pdata */
-    NULL,                        /* xdata */
-    NULL,                        /* bit */
-    "RSEG",
-    "GSINIT",
-    NULL,                        /* overlay */
-    "GSFINAL",
-    "HOME",
-    NULL,                        /* xidata */
-    NULL,                        /* xinit */
-    NULL,                        /* const_name */
-    "CABS (ABS)",                /* cabs_name */
-    "DABS (ABS)",                /* xabs_name */
-    NULL,                        /* iabs_name */
-    NULL,                        /* name of segment for initialized variables */
-    NULL,                        /* name of segment for copies of initialized variables in code space */
-    NULL,
-    NULL,
-    1,                           /* CODE is read-only */
-    1                            /* No fancy alignments supported. */
-  },
-  {NULL, NULL},
-  {-1, 0, 0, 2, 0, 4, 0},
-  {-1, FALSE},
-  {m6809_emitDebuggerSymbol},
-  {
-    256,                         /* maxCount */
-    3,                           /* sizeofElement */
-    {6, 7, 8},                   /* sizeofMatchJump[] - Assumes operand allocated to registers */
-    {6, 9, 15},                  /* sizeofRangeCompare[] - Assumes operand allocated to registers */
-    1,                           /* sizeofSubtract - Assumes use of a singel inc or dec */
-    9,                           /* sizeofDispatch - Assumes operand allocated to register e or c */
-  },
-  "_",
-  _gbz80_init,
-  _parseOptions,
-  _gbz80_options,
-  NULL,
-  _finaliseOptions,
-  _setDefaultOptions,
-  m6809_assignRegisters,
-  _getRegName,
-  _getRegByName,
-  NULL,
-  _keywordsgb,
-  0,                            /* no assembler preamble */
-  NULL,                         /* no genAssemblerEnd */
-  0,                            /* no local IVT generation code */
-  0,                            /* no genXINIT code */
-  NULL,                         /* genInitStartup */
-  _reset_regparm,
-  _reg_parm,
-  _process_pragma,
-  NULL,
-  _hasNativeMulFor,
-  hasExtBitOp,                  /* hasExtBitOp */
-  oclsExpense,                  /* oclsExpense */
-  TRUE,
-  TRUE,                         /* little endian */
-  0,                            /* leave lt */
-  0,                            /* leave gt */
-  1,                            /* transform <= to ! > */
-  1,                            /* transform >= to ! < */
-  1,                            /* transform != to !(a == b) */
-  0,                            /* leave == */
-  TRUE,                         /* Array initializer support. */
-  0,                            /* no CSE cost estimation yet */
-  NULL,                         /* no builtin functions */
-  GPOINTER,                     /* treat unqualified pointers as "generic" pointers */
-  1,                            /* reset labelKey to 1 */
-  1,                            /* globals & local statics allowed */
-  7,                            /* Number of registers handled in the tree-decomposition-based register allocator in SDCCralloc.hpp */
-  PORT_MAGIC
-};
-
-PORT tlcs90_port =
-{
-  TARGET_ID_TLCS90,
-  "tlcs90",
-  "Toshiba TLCS-90",            /* Target name */
-  NULL,                         /* Processor name */
-  {
-    glue,
-    FALSE,
-    NO_MODEL,
-    NO_MODEL,
-    NULL,                        /* model == target */
-  },
-  {                             /* Assembler */
-    _tlcs90AsmCmd,
-    NULL,
-    "-plosgffwy",                /* Options with debug */
-    "-plosgffw",                 /* Options without debug */
-    0,
-    ".asm"
-  },
-  {                             /* Linker */
-    _z80LinkCmd,                 //NULL,
-    NULL,                        //LINKCMD,
-    NULL,
-    ".rel",
-    1,
-    _crt,                        /* crt */
-    _libs_tlcs90,                /* libs */
-  },
-  {                             /* Peephole optimizer */
-    _tlcs90_defaultRules,
-    z80instructionSize,
-    NULL,
-    NULL,
-    NULL,
-    z80notUsed,
-    z80canAssign,
-    z80notUsedFrom,
-    z80symmParmStack,
-    z80canJoinRegs,
-    z80canSplitReg,
-  },
-  /* Sizes: char, short, int, long, long long, near ptr, far ptr, gptr, func ptr, banked func ptr, bit, float */
-  {1, 2, 2, 4, 8, 2, 2, 2, 2, 2, 1, 4},
-  /* tags for generic pointers */
-  {0x00, 0x40, 0x60, 0x80},     /* far, near, xstack, code */
-  {
-    "XSEG",
-    "STACK",
-    "CODE",
-    "DATA",
-    NULL,                        /* idata */
-    NULL,                        /* pdata */
-    NULL,                        /* xdata */
-    NULL,                        /* bit */
-    "RSEG (ABS)",
-    "GSINIT",                    /* static initialization */
-    NULL,                        /* overlay */
-    "GSFINAL",
-    "HOME",
-    NULL,                        /* xidata */
-    NULL,                        /* xinit */
-    NULL,                        /* const_name */
-    "CABS (ABS)",                /* cabs_name */
-    "DABS (ABS)",                /* xabs_name */
-    NULL,                        /* iabs_name */
-    "INITIALIZED",               /* name of segment for initialized variables */
-    "INITIALIZER",               /* name of segment for copies of initialized variables in code space */
-    NULL,
-    NULL,
-    1,                           /* CODE  is read-only */
-    1                            /* No fancy alignments supported. */
-  },
-  {NULL, NULL},
-  {-1, 0, 0, 4, 0, 2, 0},
-  {-1, FALSE},
-  {m6809_emitDebuggerSymbol},
-  {
-    256,                         /* maxCount */
-    3,                           /* sizeofElement */
-    {6, 7, 8},                   /* sizeofMatchJump[] - Assumes operand allocated to registers */
-    {6, 9, 15},                  /* sizeofRangeCompare[] - Assumes operand allocated to registers */
-    1,                           /* sizeofSubtract - Assumes use of a singel inc or dec */
-    9,                           /* sizeofDispatch - Assumes operand allocated to register e or c */
-  },
-  "_",
-  _tlcs90_init,
-  _parseOptions,
-  _m6809_options,
-  NULL,
-  _finaliseOptions,
-  _setDefaultOptions,
-  m6809_assignRegisters,
-  _getRegName,
-  _getRegByName,
-  NULL,
-  _keywordstlcs90,
-  0,                            /* no assembler preamble */
-  NULL,                         /* no genAssemblerEnd */
-  0,                            /* no local IVT generation code */
-  0,                            /* no genXINIT code */
-  NULL,                         /* genInitStartup */
-  _reset_regparm,
-  _reg_parm,
-  _process_pragma,
-  NULL,
-  _hasNativeMulFor,
-  hasExtBitOp,                  /* hasExtBitOp */
-  oclsExpense,                  /* oclsExpense */
-  TRUE,
-  TRUE,                         /* little endian */
-  0,                            /* leave lt */
-  0,                            /* leave gt */
-  1,                            /* transform <= to ! > */
-  1,                            /* transform >= to ! < */
-  1,                            /* transform != to !(a == b) */
-  0,                            /* leave == */
-  FALSE,                        /* Array initializer support. */
-  0,                            /* no CSE cost estimation yet */
-  0,                            /* no builtin functions */
-  GPOINTER,                     /* treat unqualified pointers as "generic" pointers */
-  1,                            /* reset labelKey to 1 */
-  1,                            /* globals & local statics allowed */
-  9,                            /* Number of registers handled in the tree-decomposition-based register allocator in SDCCralloc.hpp */
-  PORT_MAGIC
-};
-
-PORT ez80_z80_port =
-{
-  TARGET_ID_EZ80_Z80,
-  "ez80_z80",
-  "eZ80-Z80",                   /* Target name */
-  NULL,                         /* Processor name */
-  {
-    glue,
-    FALSE,
-    NO_MODEL,
-    NO_MODEL,
-    NULL,                        /* model == target */
-  },
-  {                             /* Assembler */
-    _z80AsmCmd,
-    NULL,
-    "-plosgffwy",                /* Options with debug */
-    "-plosgffw",                 /* Options without debug */
-    0,
-    ".asm"
-  },
-  {                             /* Linker */
-    _z80LinkCmd,                 //NULL,
-    NULL,                        //LINKCMD,
-    NULL,
-    ".rel",
-    1,
-    _crt,                        /* crt */
-    _libs_ez80_z80,              /* libs */
-  },
-  {                             /* Peephole optimizer */
-    _ez80_z80_defaultRules,
-    z80instructionSize,
-    NULL,
-    NULL,
-    NULL,
-    z80notUsed,
-    z80canAssign,
-    z80notUsedFrom,
-    z80symmParmStack,
-    z80canJoinRegs,
-    z80canSplitReg,
-  },
-  /* Sizes: char, short, int, long, long long, near ptr, far ptr, gptr, func ptr, banked func ptr, bit, float */
-  {1, 2, 2, 4, 8, 2, 2, 2, 2, 2, 1, 4},
-  /* tags for generic pointers */
-  {0x00, 0x40, 0x60, 0x80},     /* far, near, xstack, code */
-  {
-    "XSEG",
-    "STACK",
-    "CODE",
-    "DATA",
-    NULL,                        /* idata */
-    NULL,                        /* pdata */
-    NULL,                        /* xdata */
-    NULL,                        /* bit */
-    "RSEG (ABS)",
-    "GSINIT",
-    NULL,                        /* overlay */
-    "GSFINAL",
-    "HOME",
-    NULL,                        /* xidata */
-    NULL,                        /* xinit */
-    NULL,                        /* const_name */
-    "CABS (ABS)",                /* cabs_name */
-    "DABS (ABS)",                /* xabs_name */
-    NULL,                        /* iabs_name */
-    "INITIALIZED",               /* name of segment for initialized variables */
-    "INITIALIZER",               /* name of segment for copies of initialized variables in code space */
-    NULL,
-    NULL,
-    1,                           /* CODE  is read-only */
-    1                            /* No fancy alignments supported. */
-  },
-  {NULL, NULL},
-  {-1, 0, 0, 4, 0, 3, 0},
-  {-1, FALSE},
-  {m6809_emitDebuggerSymbol},
-  {
-    256,                         /* maxCount */
-    3,                           /* sizeofElement */
-    {6, 7, 8},                   /* sizeofMatchJump[] - Assumes operand allocated to registers */
-    {6, 9, 15},                  /* sizeofRangeCompare[] - Assumes operand allocated to registers */
-    1,                           /* sizeofSubtract - Assumes use of a singel inc or dec */
-    9,                           /* sizeofDispatch - Assumes operand allocated to register e or c */
-  },
-  "_",
-  _ez80_z80_init,
-  _parseOptions,
-  _m6809_options,
-  NULL,
-  _finaliseOptions,
-  _setDefaultOptions,
-  m6809_assignRegisters,
-  _getRegName,
-  _getRegByName,
-  NULL,
-  _keywords,
-  0,                            /* no assembler preamble */
-  NULL,                         /* no genAssemblerEnd */
-  0,                            /* no local IVT generation code */
-  0,                            /* no genXINIT code */
-  NULL,                         /* genInitStartup */
-  _reset_regparm,
-  _reg_parm,
-  _process_pragma,
-  NULL,
-  _hasNativeMulFor,
-  hasExtBitOp,                  /* hasExtBitOp */
-  oclsExpense,                  /* oclsExpense */
-  TRUE,
-  TRUE,                         /* little endian */
-  0,                            /* leave lt */
-  0,                            /* leave gt */
-  1,                            /* transform <= to ! > */
-  1,                            /* transform >= to ! < */
-  1,                            /* transform != to !(a == b) */
-  0,                            /* leave == */
-  FALSE,                        /* Array initializer support. */
-  0,                            /* no CSE cost estimation yet */
-  _m6809_builtins,                /* builtin functions */
-  GPOINTER,                     /* treat unqualified pointers as "generic" pointers */
-  1,                            /* reset labelKey to 1 */
-  1,                            /* globals & local statics allowed */
-  9,                            /* Number of registers handled in the tree-decomposition-based register allocator in SDCCralloc.hpp */
-  PORT_MAGIC
-};
-
-PORT z80n_port =
-{
-  TARGET_ID_Z80N,
-  "z80n",
-  "z80n",                       /* Target name */
-  NULL,                         /* Processor name */
-  {
-    glue,
-    FALSE,
-    NO_MODEL,
-    NO_MODEL,
-    NULL,                        /* model == target */
-  },
-  {                             /* Assembler */
-    _z80AsmCmd,
-    NULL,
-    "-plosgffwy",                /* Options with debug */
-    "-plosgffw",                 /* Options without debug */
-    0,
-    ".asm"
-  },
-  {                             /* Linker */
-    _z80LinkCmd,                 //NULL,
-    NULL,                        //LINKCMD,
-    NULL,
-    ".rel",
-    1,
-    _crt,                        /* crt */
-    _libs_z80n,                  /* libs */
-  },
-  {                             /* Peephole optimizer */
-    _z80n_defaultRules,
-    z80instructionSize,
-    NULL,
-    NULL,
-    NULL,
-    z80notUsed,
-    z80canAssign,
-    z80notUsedFrom,
-    z80symmParmStack,
-    z80canJoinRegs,
-    z80canSplitReg,
-  },
-  /* Sizes: char, short, int, long, long long, near ptr, far ptr, gptr, func ptr, banked func ptr, bit, float */
-  {1, 2, 2, 4, 8, 2, 2, 2, 2, 2, 1, 4},
-  /* tags for generic pointers */
-  {0x00, 0x40, 0x60, 0x80},     /* far, near, xstack, code */
-  {
-    "XSEG",
-    "STACK",
-    "CODE",
-    "DATA",
-    NULL,                        /* idata */
-    NULL,                        /* pdata */
-    NULL,                        /* xdata */
-    NULL,                        /* bit */
-    "RSEG (ABS)",
-    "GSINIT",
-    NULL,                        /* overlay */
-    "GSFINAL",
-    "HOME",
-    NULL,                        /* xidata */
-    NULL,                        /* xinit */
-    NULL,                        /* const_name */
-    "CABS (ABS)",                /* cabs_name */
-    "DABS (ABS)",                /* xabs_name */
-    NULL,                        /* iabs_name */
-    "INITIALIZED",               /* name of segment for initialized variables */
-    "INITIALIZER",               /* name of segment for copies of initialized variables in code space */
-    NULL,
-    NULL,
-    1,                           /* CODE  is read-only */
-    1                            /* No fancy alignments supported. */
-  },
-  {NULL, NULL},
-  {-1, 0, 0, 4, 0, 3, 0},
-  {-1, FALSE},
-  {m6809_emitDebuggerSymbol},
-  {
-    256,                         /* maxCount */
-    3,                           /* sizeofElement */
-    {6, 7, 8},                   /* sizeofMatchJump[] - Assumes operand allocated to registers */
-    {6, 9, 15},                  /* sizeofRangeCompare[] - Assumes operand allocated to registers */
-    1,                           /* sizeofSubtract - Assumes use of a singel inc or dec */
-    9,                           /* sizeofDispatch - Assumes operand allocated to register e or c */
-  },
-  "_",
-  _z80n_init,
   _parseOptions,
   _m6809_options,
   NULL,

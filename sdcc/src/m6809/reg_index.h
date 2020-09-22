@@ -25,8 +25,7 @@
 
 enum
 {
-  MIN_IDX=0,
-  A_IDX = MIN_IDX,    /* Accumulator A */
+  A_IDX = 0,          /* Accumulator A */
   B_IDX,              /* Accumulator B */
 
   XL_IDX,             /* Lower byte of X */
