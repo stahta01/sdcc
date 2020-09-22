@@ -296,6 +296,9 @@
 		<Unit filename="../src/m6809/gen.h">
 			<Option target="backend" />
 		</Unit>
+		<Unit filename="../src/m6809/m6809.h">
+			<Option target="backend" />
+		</Unit>
 		<Unit filename="../src/m6809/main.c">
 			<Option compilerVar="CC" />
 			<Option target="backend" />
