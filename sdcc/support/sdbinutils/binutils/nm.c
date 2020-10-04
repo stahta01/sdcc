@@ -171,7 +171,7 @@ static char value_format_32bit[] = "%08lx";
 #if BFD_HOST_64BIT_LONG
 static char value_format_64bit[] = "%016lx";
 #elif BFD_HOST_64BIT_LONG_LONG
-#ifndef __MSVCRT__
+#if !defined(__MSVCRT__) || defined(__USE_MINGW_ANSI_STDIO)
 static char value_format_64bit[] = "%016llx";
 #else
 static char value_format_64bit[] = "%016I64x";
@@ -302,7 +302,7 @@ set_print_radix (char *radix)
 #if BFD_HOST_64BIT_LONG
       value_format_64bit[5] = *radix;
 #elif BFD_HOST_64BIT_LONG_LONG
-#ifndef __MSVCRT__
+#if !defined(__MSVCRT__) || defined(__USE_MINGW_ANSI_STDIO)
       value_format_64bit[6] = *radix;
 #else
       value_format_64bit[7] = *radix;
